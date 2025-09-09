@@ -19,8 +19,8 @@ public class Drive extends LinearOpMode {
         DcMotor backRightMotor = hardwareMap.dcMotor.get("backRight");
 
 
-        frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         waitForStart();
         if (isStopRequested()) return;
