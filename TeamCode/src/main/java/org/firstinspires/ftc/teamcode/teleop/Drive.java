@@ -70,7 +70,7 @@ public class Drive extends LinearOpMode {
         telemetry.addLine("Initialized! Ready to Start.");
         telemetry.update();
 
-        feedServo.setPosition(0);
+        feedServo.setPosition(1);
         waitForStart();
         if (isStopRequested())
             return;
