@@ -16,7 +16,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import java.util.Map;
 
 public class Constants {
-    public static FollowerConstants followerConstants = new FollowerConstants();
+    public static FollowerConstants followerConstants = new FollowerConstants()
+            .mass(9)
+            .forwardZeroPowerAcceleration(-800)
+            .lateralZeroPowerAcceleration(-90);
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
@@ -29,7 +32,13 @@ public class Constants {
             .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD);
+            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .xVelocity(92.2747)
+            .yVelocity(44.96158029150776)
+            //.robotWidth(17.5)
+            //.robotLength(17)
+            ;
+
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
