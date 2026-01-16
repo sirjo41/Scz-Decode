@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.spindexer.Spindexer;
  * Advanced State-Machine Based Autonomous
  * Features: Concurrent operations, timeout protection, dynamic time management
  */
-@Autonomous(name = "Red_1_Advanced", group = "Autonomous")
+// @Autonomous(name = "Red_1_Advanced", group = "Autonomous") // DISABLED
 public class Red_1 extends LinearOpMode {
 
     // ======================== STATE MACHINE ========================

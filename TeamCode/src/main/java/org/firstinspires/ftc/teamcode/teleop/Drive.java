@@ -2,11 +2,9 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.limelight.LimelightControl;
 import org.firstinspires.ftc.teamcode.spindexer.Spindexer;
@@ -22,10 +20,6 @@ public class Drive extends LinearOpMode {
 
     // Spindexer & Intake Hardware
     private static final String SPINDEXER_MOTOR = "spindexer";
-    private static final String INTAKE_COLOR = "intakeColor";
-    private static final String SHOOTER_MOTOR = "shooter";
-    private static final String FEEDER_SERVO = "feeder";
-    private static final String SHOOTER_COLOR = "shooterColor";
     private static final String INTAKE_MOTOR = "intake";
 
     // Subsystems
@@ -54,12 +48,7 @@ public class Drive extends LinearOpMode {
 
         // Spindexer System
         DcMotorEx spinMotor = hardwareMap.get(DcMotorEx.class, SPINDEXER_MOTOR);
-        ColorSensor inColor = hardwareMap.get(ColorSensor.class, INTAKE_COLOR);
-        DcMotorEx shootMotor = hardwareMap.get(DcMotorEx.class, SHOOTER_MOTOR);
-        Servo feedServo = hardwareMap.get(Servo.class, FEEDER_SERVO);
-        ColorSensor shootColor = hardwareMap.get(ColorSensor.class, SHOOTER_COLOR);
-
-        spindexer = new Spindexer(this, spinMotor, inColor, shootMotor, feedServo, shootColor);
+        spindexer = new Spindexer(this, spinMotor);
 
         // Intake Motor
         intake = hardwareMap.get(DcMotor.class, INTAKE_MOTOR);
@@ -69,8 +58,6 @@ public class Drive extends LinearOpMode {
 
         telemetry.addLine("Initialized! Ready to Start.");
         telemetry.update();
-
-        feedServo.setPosition(1);
         waitForStart();
         if (isStopRequested())
             return;
@@ -95,14 +82,12 @@ public class Drive extends LinearOpMode {
             // === 2. Spindexer Control (Gamepad 1) ===
 
             // Edge Detection
-            boolean xEdge = gamepad1.x && !lastX; // Index One / Manual Sort
-            boolean yEdge = gamepad1.y && !lastY; // Auto Shoot (Pattern)
-            boolean bEdge = gamepad1.b && !lastB; // Manual Eject Single
-            boolean dpUpEdge = gamepad1.dpad_up && !lastDpUp; // Cycle Pattern Manual
+            boolean leftEdge = gamepad1.dpad_left && !lastX;
+            boolean rightEdge = gamepad1.dpad_right && !lastY;
+            boolean dpUpEdge = gamepad1.dpad_up && !lastDpUp; // Cycle Pattern
 
-            lastX = gamepad1.x;
-            lastY = gamepad1.y;
-            lastB = gamepad1.b;
+            lastX = gamepad1.dpad_left;
+            lastY = gamepad1.dpad_right;
             lastDpUp = gamepad1.dpad_up;
 
             // A: Intake (Run Intake)
@@ -112,28 +97,15 @@ public class Drive extends LinearOpMode {
                 intake.setPower(0.0);
             }
 
-            // X: Index One Ball (Manual Sort / Store)
-            if (xEdge) {
-                // Reads color at intake, stores it, moves 120 degrees
-                spindexer.intakeOne(telemetry);
+            // DPad Left: Move spindexer left
+            if (leftEdge) {
+                spindexer.moveLeft(telemetry);
             }
 
-            // Y: Auto Sort / Shoot (Execute Pattern)
-//            if (yEdge) {
-//                // This will start shooter, align balls, check colors, and fire
-//                spindexer.ejectAllByPattern(telemetry);
-//            }
-
-            // B: Manual Eject (Current Slot)
-            // Note: Spindexer doesn't have a public ejectCurrentSlot method that actuates
-            // servo
-            // We can add one or just use internal logic logic if needed,
-            // but for now, let's assume 'ejectAllByPattern' is the primary way.
-            // If user wants manual single eject, we might need to expose ejectSlot logic
-            // publicly
-            // or just rely on Auto Sort. Let's leave B as a "Cycle Pattern" backup or
-            // similar if needed.
-            // Actually, let's map B to cycle pattern too, just in case
+            // DPad Right: Move spindexer right
+            if (rightEdge) {
+                spindexer.moveRight(telemetry);
+            }
 
             // Update Pattern from Limelight (Auto-Detect)
             Spindexer.GamePattern detected = limelight.getGamePatternFromTags();
@@ -153,10 +125,12 @@ public class Drive extends LinearOpMode {
             telemetry.addLine("--- Spindexer State ---");
             telemetry.addData("Pattern", spindexer.getGamePattern());
             telemetry.addData("Detected Tag Pattern", detected);
-            telemetry.addData("Shooter Vel", spindexer.getShooterVelocity());
-
-            Spindexer.Ball[] slots = spindexer.getSlots();
-            telemetry.addData("Slots", "%s | %s | %s", slots[0], slots[1], slots[2]);
+            telemetry.addData("Encoder", spindexer.getEncoder());
+            telemetry.addData("Target", spindexer.getTarget());
+            telemetry.addLine("\nControls:");
+            telemetry.addLine("A: Run Intake");
+            telemetry.addLine("DPad Left/Right: Move Spindexer");
+            telemetry.addLine("DPad Up: Cycle Pattern");
 
             telemetry.update();
         }
