@@ -18,14 +18,14 @@ public class ColorTest extends OpMode {
 
     @Override
     public void init() {
-        sen = hardwareMap.get(NormalizedColorSensor.class, "sensor");
+        sen = hardwareMap.get(NormalizedColorSensor.class, "intakeColorSensor");
     }
 
     public DetectedColor getDetectedColor(NormalizedRGBA colors) {
 
-        float r = colors.red   / colors.alpha;
+        float r = colors.red / colors.alpha;
         float g = colors.green / colors.alpha;
-        float b = colors.blue  / colors.alpha;
+        float b = colors.blue / colors.alpha;
 
         // GREEN detection (dominant green)
         if (g > 0.40 && g > r && g > b) {
@@ -44,9 +44,9 @@ public class ColorTest extends OpMode {
     public void loop() {
         NormalizedRGBA colors = sen.getNormalizedColors();
 
-        float r = colors.red   / colors.alpha;
+        float r = colors.red / colors.alpha;
         float g = colors.green / colors.alpha;
-        float b = colors.blue  / colors.alpha;
+        float b = colors.blue / colors.alpha;
 
         telemetry.addData("R", r);
         telemetry.addData("G", g);

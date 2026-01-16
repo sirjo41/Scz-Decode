@@ -63,6 +63,7 @@ public class Drive extends LinearOpMode {
             return;
 
         while (opModeIsActive()) {
+
             // === 1. Drive Control (Gamepad 1) ===
             double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
             double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
@@ -97,6 +98,14 @@ public class Drive extends LinearOpMode {
                 intake.setPower(0.0);
             }
 
+            // Update intake system (auto-detect balls and track slots)
+            spindexer.updateIntake();
+
+            // BACK Button: Emergency Stop Spindexer
+            if (gamepad1.back) {
+                spindexer.emergencyStop();
+            }
+
             // DPad Left: Move spindexer left
             if (leftEdge) {
                 spindexer.moveLeft(telemetry);
@@ -127,10 +136,15 @@ public class Drive extends LinearOpMode {
             telemetry.addData("Detected Tag Pattern", detected);
             telemetry.addData("Encoder", spindexer.getEncoder());
             telemetry.addData("Target", spindexer.getTarget());
-            telemetry.addLine("\nControls:");
+
+            // Add slot telemetry
+            spindexer.addSlotTelemetry(telemetry);
+
+            telemetry.addLine("\n--- Controls ---");
             telemetry.addLine("A: Run Intake");
             telemetry.addLine("DPad Left/Right: Move Spindexer");
             telemetry.addLine("DPad Up: Cycle Pattern");
+            telemetry.addLine("BACK: Emergency Stop Spindexer");
 
             telemetry.update();
         }
