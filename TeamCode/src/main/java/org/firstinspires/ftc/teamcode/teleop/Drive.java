@@ -19,7 +19,7 @@ public class Drive extends LinearOpMode {
     private static final String MOTOR_BL = "backLeft";
     private static final String MOTOR_FR = "frontRight";
     private static final String MOTOR_BR = "backRight";
-    
+
     // Spindexer & Intake Hardware
     private static final String SPINDEXER_MOTOR = "spindexer";
     private static final String INTAKE_COLOR = "intakeColor";
@@ -42,7 +42,7 @@ public class Drive extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         // --- Hardware Initialization ---
-        
+
         // Drive Motors
         DcMotor frontLeftMotor = hardwareMap.get(DcMotor.class, MOTOR_FL);
         DcMotor backLeftMotor = hardwareMap.get(DcMotor.class, MOTOR_BL);
@@ -58,8 +58,8 @@ public class Drive extends LinearOpMode {
         DcMotorEx shootMotor = hardwareMap.get(DcMotorEx.class, SHOOTER_MOTOR);
         Servo feedServo = hardwareMap.get(Servo.class, FEEDER_SERVO);
         ColorSensor shootColor = hardwareMap.get(ColorSensor.class, SHOOTER_COLOR);
-        
-        spindexer = new Spindexer(spinMotor, inColor, shootMotor, feedServo, shootColor);
+
+        spindexer = new Spindexer(this, spinMotor, inColor, shootMotor, feedServo, shootColor);
 
         // Intake Motor
         intake = hardwareMap.get(DcMotor.class, INTAKE_MOTOR);
@@ -71,7 +71,8 @@ public class Drive extends LinearOpMode {
         telemetry.update();
 
         waitForStart();
-        if (isStopRequested()) return;
+        if (isStopRequested())
+            return;
 
         while (opModeIsActive()) {
             // === 1. Drive Control (Gamepad 1) ===
@@ -91,7 +92,7 @@ public class Drive extends LinearOpMode {
             backRightMotor.setPower(backRightPower);
 
             // === 2. Spindexer Control (Gamepad 1) ===
-            
+
             // Edge Detection
             boolean xEdge = gamepad1.x && !lastX; // Index One / Manual Sort
             boolean yEdge = gamepad1.y && !lastY; // Auto Shoot (Pattern)
@@ -109,7 +110,7 @@ public class Drive extends LinearOpMode {
             } else {
                 intake.setPower(0.0);
             }
-            
+
             // X: Index One Ball (Manual Sort / Store)
             if (xEdge) {
                 // Reads color at intake, stores it, moves 120 degrees
@@ -121,21 +122,24 @@ public class Drive extends LinearOpMode {
                 // This will start shooter, align balls, check colors, and fire
                 spindexer.ejectAllByPattern(telemetry);
             }
-            
+
             // B: Manual Eject (Current Slot)
-            // Note: Spindexer doesn't have a public ejectCurrentSlot method that actuates servo
-            // We can add one or just use internal logic logic if needed, 
+            // Note: Spindexer doesn't have a public ejectCurrentSlot method that actuates
+            // servo
+            // We can add one or just use internal logic logic if needed,
             // but for now, let's assume 'ejectAllByPattern' is the primary way.
-            // If user wants manual single eject, we might need to expose ejectSlot logic publicly 
-            // or just rely on Auto Sort. Let's leave B as a "Cycle Pattern" backup or similar if needed.
+            // If user wants manual single eject, we might need to expose ejectSlot logic
+            // publicly
+            // or just rely on Auto Sort. Let's leave B as a "Cycle Pattern" backup or
+            // similar if needed.
             // Actually, let's map B to cycle pattern too, just in case
-            
+
             // Update Pattern from Limelight (Auto-Detect)
             Spindexer.GamePattern detected = limelight.getGamePatternFromTags();
             if (detected != null) {
                 spindexer.setGamePattern(detected);
             }
-            
+
             // DPad Up: Manual Pattern Cycle Override
             if (dpUpEdge) {
                 Spindexer.GamePattern current = spindexer.getGamePattern();
@@ -149,13 +153,13 @@ public class Drive extends LinearOpMode {
             telemetry.addData("Pattern", spindexer.getGamePattern());
             telemetry.addData("Detected Tag Pattern", detected);
             telemetry.addData("Shooter Vel", spindexer.getShooterVelocity());
-            
+
             Spindexer.Ball[] slots = spindexer.getSlots();
             telemetry.addData("Slots", "%s | %s | %s", slots[0], slots[1], slots[2]);
-            
+
             telemetry.update();
         }
-        
+
         limelight.stop();
     }
 }
