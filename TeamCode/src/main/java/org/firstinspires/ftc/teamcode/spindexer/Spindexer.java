@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.spindexer;
 
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -25,10 +26,10 @@ public class Spindexer {
 
     // PID coefficients for position control
     private static final PIDFCoefficients POS_PIDF = new PIDFCoefficients(
-            8.0,   // kP - Proportional gain
-            0.0,   // kI - Integral gain
-            0.6,   // kD - Derivative gain
-            0.0    // kF - Feedforward gain
+            8.0, // kP - Proportional gain
+            0.0, // kI - Integral gain
+            0.6, // kD - Derivative gain
+            0.0 // kF - Feedforward gain
     );
 
     // Motor control parameters
@@ -63,9 +64,10 @@ public class Spindexer {
      * Defines which color to eject first based on game requirements
      */
     public enum GamePattern {
-        GREEN_FIRST,  // Green -> Purple -> Purple
+        GREEN_FIRST, // Green -> Purple -> Purple
         GREEN_SECOND, // Purple -> Green -> Purple
-        GREEN_THIRD   // Purple -> Purple -> Green
+        GREEN_THIRD,
+        NULL // Purple -> Purple -> Green
     }
 
     // Hardware components
@@ -80,10 +82,10 @@ public class Spindexer {
     private double accum = 0.0;
     private int targetCounts = 0;
     private int intakeIndex = 0;
-    private boolean isAtMid = false;  // True when at 60° mid-position (eject position)
+    private boolean isAtMid = false; // True when at 60° mid-position (eject position)
 
     // Ball storage (3 slots)
-    private final Ball[] slots = {Ball.EMPTY, Ball.EMPTY, Ball.EMPTY};
+    private final Ball[] slots = { Ball.EMPTY, Ball.EMPTY, Ball.EMPTY };
 
     // Game pattern for ejection strategy
     private GamePattern pattern = GamePattern.GREEN_FIRST;
@@ -97,13 +99,27 @@ public class Spindexer {
     /**
      * Constructor - Initializes the spindexer with motors and sensors.
      *
-     * @param motor       The motor controlling the indexer rotation
-     * @param intakeColor Color sensor at the intake position
+     * @param motor        The motor controlling the indexer rotation
+     * @param intakeColor  Color sensor at the intake position
      * @param shooterMotor Motor for the flywheel shooter
-     * @param feederServo Servo to push balls into the shooter
+     * @param feederServo  Servo to push balls into the shooter
      * @param shooterColor Color sensor at the shooter position
      */
-    public Spindexer(DcMotorEx motor, ColorSensor intakeColor, DcMotorEx shooterMotor, Servo feederServo, ColorSensor shooterColor) {
+    private final LinearOpMode opMode;
+
+    /**
+     * Constructor - Initializes the spindexer with motors and sensors.
+     *
+     * @param opMode       The OpMode instance (required for loop checks)
+     * @param motor        The motor controlling the indexer rotation
+     * @param intakeColor  Color sensor at the intake position
+     * @param shooterMotor Motor for the flywheel shooter
+     * @param feederServo  Servo to push balls into the shooter
+     * @param shooterColor Color sensor at the shooter position
+     */
+    public Spindexer(LinearOpMode opMode, DcMotorEx motor, ColorSensor intakeColor, DcMotorEx shooterMotor,
+            Servo feederServo, ColorSensor shooterColor) {
+        this.opMode = opMode;
         this.motor = motor;
         this.intakeColor = intakeColor;
         this.shooterMotor = shooterMotor;
@@ -135,11 +151,22 @@ public class Spindexer {
         this.shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         try {
             this.shooterMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, SHOOTER_PIDF);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         // Configure Feeder Servo
         this.feederServo.setPosition(FEEDER_IDLE);
     }
+
+    // ... (Lines 144-558 remain unchanged, but I must preserve imports. Since I'm
+    // replacing from line 106, I am safe regarding imports at top)
+
+    // Wait, replacing a huge chunk might be risky if I don't provide the whole
+    // chunk.
+    // I should only replace the Constructor and the opModeIsActive method.
+    // But they are far apart. I should use `multi_replace_file_content` instead.
+    // I will use `replace_file_content` individually or switch tool.
+    // I'll cancel this tool call and use multi_replace.
 
     /**
      * Intakes one ball: reads color, stores it, and rotates to next slot.
@@ -263,7 +290,7 @@ public class Spindexer {
      */
     public boolean prepareFirstEjectByPattern(Telemetry telemetry) {
         if (!hasThreeBalls()) {
-            return false;  // Cannot prepare if we don't have 3 balls
+            return false; // Cannot prepare if we don't have 3 balls
         }
 
         // Determine which color to eject first based on pattern
@@ -277,7 +304,7 @@ public class Spindexer {
             targetColor = (targetColor == Ball.GREEN) ? Ball.PURPLE : Ball.GREEN;
             targetSlot = findFirst(targetColor);
             if (targetSlot == null) {
-                return false;  // No balls to eject
+                return false; // No balls to eject
             }
         }
 
@@ -306,8 +333,9 @@ public class Spindexer {
         startShooter();
         try {
             // Wait briefly for shooter to spin up if needed
-            Thread.sleep(500); 
-        } catch (InterruptedException ignored) {}
+            Thread.sleep(500);
+        } catch (InterruptedException ignored) {
+        }
 
         switch (pattern) {
             case GREEN_FIRST:
@@ -321,7 +349,7 @@ public class Spindexer {
                 break;
         }
         stopShooter();
-        isAtMid = false;  // After full ejection, we end at an intake stop
+        isAtMid = false; // After full ejection, we end at an intake stop
     }
 
     /**
@@ -398,12 +426,14 @@ public class Spindexer {
             feederServo.setPosition(FEEDER_EJECT);
             try {
                 Thread.sleep(FEEDER_SLEEP_MS);
-            } catch (InterruptedException ignored) {}
+            } catch (InterruptedException ignored) {
+            }
 
             feederServo.setPosition(FEEDER_IDLE);
             try {
                 Thread.sleep(FEEDER_SLEEP_MS); // Wait for servo to return
-            } catch (InterruptedException ignored) {}
+            } catch (InterruptedException ignored) {
+            }
 
             // Clear the slot only after successful ejection
             slots[slotIndex] = Ball.EMPTY;
@@ -411,7 +441,8 @@ public class Spindexer {
             // Mismatch detected! Update internal state to match reality
             slots[slotIndex] = actual;
             if (telemetry != null) {
-                telemetry.addData("Verification", "Mismatch at slot %d! Expected %s, Found %s", slotIndex, expected, actual);
+                telemetry.addData("Verification", "Mismatch at slot %d! Expected %s, Found %s", slotIndex, expected,
+                        actual);
                 telemetry.update();
             }
         }
@@ -537,7 +568,8 @@ public class Spindexer {
      * Helper to read color from a specific sensor.
      */
     private Ball readColor(ColorSensor sensor) {
-        if (sensor.alpha() <= PRESENCE_ALPHA_THRESHOLD) return Ball.EMPTY;
+        if (sensor.alpha() <= PRESENCE_ALPHA_THRESHOLD)
+            return Ball.EMPTY;
 
         int r = sensor.red();
         int g = sensor.green();
@@ -547,25 +579,27 @@ public class Spindexer {
         boolean isPurple = (b > g + 5) && (r > g + 5);
         boolean isGreen = (g > r + 5) && (g > b + 5);
 
-        if (isGreen && !isPurple) return Ball.GREEN;
-        if (isPurple && !isGreen) return Ball.PURPLE;
+        if (isGreen && !isPurple)
+            return Ball.GREEN;
+        if (isPurple && !isGreen)
+            return Ball.PURPLE;
 
         // Fallback: choose dominant color channel
-        if (g >= r && g >= b) return Ball.GREEN;
+        if (g >= r && g >= b)
+            return Ball.GREEN;
         return Ball.PURPLE;
     }
 
     /**
      * Checks if the OpMode is still active.
      * WARNING: This implementation always returns true.
-     * In a real OpMode, inject a reference to LinearOpMode and check opModeIsActive().
+     * In a real OpMode, inject a reference to LinearOpMode and check
+     * opModeIsActive().
      *
      * @return Always true (placeholder implementation)
      */
     private boolean opModeIsActive() {
-        // TODO: Replace with actual OpMode.opModeIsActive() check
-        // Consider passing LinearOpMode reference in constructor or movement methods
-        return true;
+        return opMode.opModeIsActive();
     }
 
     /**
@@ -581,9 +615,8 @@ public class Spindexer {
     public void stopShooter() {
         shooterMotor.setVelocity(0);
     }
-    
+
     public double getShooterVelocity() {
         return shooterMotor.getVelocity();
     }
 }
-```

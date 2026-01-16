@@ -21,7 +21,7 @@ public class Drive extends LinearOpMode {
     private static final String MOTOR_BR = "backRight";
     
     // Spindexer & Intake Hardware
-    private static final String SPINDEXER_MOTOR = "motor";
+    private static final String SPINDEXER_MOTOR = "spindexer";
     private static final String INTAKE_COLOR = "intakeColor";
     private static final String SHOOTER_MOTOR = "shooter";
     private static final String FEEDER_SERVO = "feeder";
@@ -103,7 +103,7 @@ public class Drive extends LinearOpMode {
             lastB = gamepad1.b;
             lastDpUp = gamepad1.dpad_up;
 
-            // A: Intake (Run Rollers)
+            // A: Intake (Run Intake)
             if (gamepad1.a) {
                 intake.setPower(1.0);
             } else {

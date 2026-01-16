@@ -20,7 +20,7 @@ public class LimelightTest extends LinearOpMode {
         limelight = new LimelightControl(hardwareMap, telemetry);
 
         telemetry.addLine("Limelight Test Initialized");
-        telemetry.addLine("Show AprilTags (ID 1, 2, 3 or 11, 12, 13)");
+        telemetry.addLine("Show AprilTags (11, 12, 13)");
         telemetry.addLine("to see resolved GamePattern.");
         telemetry.update();
 

@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.teleop;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.teamcode.spindexer.Spindexer;
@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.spindexer.Spindexer;
 public class SpindexerControlTest extends LinearOpMode {
 
     // Hardware configuration names
-    private static final String MOTOR_NAME = "motor";
+    private static final String SPINDEXER_NAME = "spindexer";
     private static final String INTAKE_COLOR_NAME = "intakeColor";
     private static final String INTAKE_NAME = "intake";
     private static final String SHOOTER_NAME = "shooter";
@@ -38,7 +38,7 @@ public class SpindexerControlTest extends LinearOpMode {
     @Override
     public void runOpMode() {
         // Initialize hardware
-        DcMotorEx motor = hardwareMap.get(DcMotorEx.class, MOTOR_NAME);
+        DcMotorEx motor = hardwareMap.get(DcMotorEx.class, SPINDEXER_NAME);
         DcMotor intake = hardwareMap.get(DcMotor.class, INTAKE_NAME);
         ColorSensor intakeColor = hardwareMap.get(ColorSensor.class, INTAKE_COLOR_NAME);
         DcMotorEx shooter = hardwareMap.get(DcMotorEx.class, SHOOTER_NAME);
