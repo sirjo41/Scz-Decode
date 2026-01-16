@@ -60,14 +60,17 @@ public class Spindexer {
     }
 
     /**
-     * Game pattern enumeration for ejection strategy
-     * Defines which color to eject first based on game requirements
+     * Game pattern enumeration for ejection strategy.
+     * Defines the order in which balls should be ejected based on game
+     * requirements.
+     * - GREEN_FIRST: Eject green first, then all purple balls
+     * - GREEN_SECOND: Eject one purple, then all greens, then remaining purples
+     * - GREEN_THIRD: Eject all purple balls first, then all green balls
      */
     public enum GamePattern {
-        GREEN_FIRST, // Green -> Purple -> Purple
-        GREEN_SECOND, // Purple -> Green -> Purple
-        GREEN_THIRD,
-        NULL // Purple -> Purple -> Green
+        GREEN_FIRST,
+        GREEN_SECOND,
+        GREEN_THIRD
     }
 
     // Hardware components
@@ -90,21 +93,6 @@ public class Spindexer {
     // Game pattern for ejection strategy
     private GamePattern pattern = GamePattern.GREEN_FIRST;
 
-    /**
-     * Constructor - Initializes the spindexer with motor and color sensor.
-     *
-     * @param motor       The motor controlling the indexer rotation
-     * @param intakeColor Color sensor at the intake position
-     */
-    /**
-     * Constructor - Initializes the spindexer with motors and sensors.
-     *
-     * @param motor        The motor controlling the indexer rotation
-     * @param intakeColor  Color sensor at the intake position
-     * @param shooterMotor Motor for the flywheel shooter
-     * @param feederServo  Servo to push balls into the shooter
-     * @param shooterColor Color sensor at the shooter position
-     */
     private final LinearOpMode opMode;
 
     /**
@@ -157,16 +145,6 @@ public class Spindexer {
         // Configure Feeder Servo
         this.feederServo.setPosition(FEEDER_IDLE);
     }
-
-    // ... (Lines 144-558 remain unchanged, but I must preserve imports. Since I'm
-    // replacing from line 106, I am safe regarding imports at top)
-
-    // Wait, replacing a huge chunk might be risky if I don't provide the whole
-    // chunk.
-    // I should only replace the Constructor and the opModeIsActive method.
-    // But they are far apart. I should use `multi_replace_file_content` instead.
-    // I will use `replace_file_content` individually or switch tool.
-    // I'll cancel this tool call and use multi_replace.
 
     /**
      * Intakes one ball: reads color, stores it, and rotates to next slot.
@@ -592,11 +570,9 @@ public class Spindexer {
 
     /**
      * Checks if the OpMode is still active.
-     * WARNING: This implementation always returns true.
-     * In a real OpMode, inject a reference to LinearOpMode and check
-     * opModeIsActive().
+     * Used to safely exit loops when the program is stopped.
      *
-     * @return Always true (placeholder implementation)
+     * @return True if the OpMode is running, false otherwise
      */
     private boolean opModeIsActive() {
         return opMode.opModeIsActive();
@@ -618,5 +594,176 @@ public class Spindexer {
 
     public double getShooterVelocity() {
         return shooterMotor.getVelocity();
+    }
+
+    // ======================== ADVANCED FEATURES ========================
+
+    /**
+     * Shooter velocity tolerance for readiness check (ticks per second).
+     */
+    private static final double SHOOTER_VELOCITY_TOLERANCE = 100.0;
+
+    /**
+     * State tracking for non-blocking intake operation.
+     */
+    private enum IntakeState {
+        IDLE,
+        READING_COLOR,
+        ROTATING_60,
+        ROTATING_120,
+        COMPLETE
+    }
+
+    private IntakeState intakeState = IntakeState.IDLE;
+    private Ball pendingBallColor = Ball.EMPTY;
+    private int pendingSlotIndex = 0;
+
+    /**
+     * Starts a non-blocking intake operation.
+     * Call isIntakeComplete() in a loop to check progress.
+     * Call completeIntake() to finalize when done.
+     */
+    public void startIntake() {
+        if (intakeState != IntakeState.IDLE) {
+            return; // Already in progress
+        }
+
+        // Read color at current position
+        pendingBallColor = readColorAtIntake();
+        pendingSlotIndex = intakeIndex;
+
+        // Start rotation
+        int mid = stepForward60();
+        setTarget(mid);
+        intakeState = IntakeState.ROTATING_60;
+    }
+
+    /**
+     * Checks if the non-blocking intake is complete.
+     * Must be called repeatedly in a loop until it returns true.
+     *
+     * @return True if intake is finished and can be completed
+     */
+    public boolean isIntakeComplete() {
+        if (intakeState == IntakeState.IDLE) {
+            return true;
+        }
+
+        // Check if motor reached target
+        if (!motor.isBusy()) {
+            if (intakeState == IntakeState.ROTATING_60) {
+                // First half done, start second half
+                int stop = stepForward60();
+                setTarget(stop);
+                intakeState = IntakeState.ROTATING_120;
+            } else if (intakeState == IntakeState.ROTATING_120) {
+                // Rotation complete
+                intakeState = IntakeState.COMPLETE;
+                return true;
+            }
+        }
+
+        return intakeState == IntakeState.COMPLETE;
+    }
+
+    /**
+     * Finalizes the intake operation after isIntakeComplete() returns true.
+     * Updates internal state and resets for next intake.
+     */
+    public void completeIntake() {
+        if (intakeState == IntakeState.COMPLETE) {
+            slots[pendingSlotIndex] = pendingBallColor;
+            intakeIndex = mod3(intakeIndex + 1);
+            intakeState = IntakeState.IDLE;
+        }
+    }
+
+    /**
+     * Cancels any in-progress non-blocking intake.
+     */
+    public void cancelIntake() {
+        intakeState = IntakeState.IDLE;
+    }
+
+    /**
+     * Checks if the shooter is at target velocity and ready to eject.
+     *
+     * @return True if shooter velocity is within tolerance
+     */
+    public boolean isShooterReady() {
+        double currentVel = shooterMotor.getVelocity();
+        return Math.abs(currentVel - SHOOTER_VELOCITY) < SHOOTER_VELOCITY_TOLERANCE;
+    }
+
+    /**
+     * Gets the shooter velocity as a percentage of target.
+     *
+     * @return Percentage (0.0 to 100.0+)
+     */
+    public double getShooterVelocityPercent() {
+        return (shooterMotor.getVelocity() / SHOOTER_VELOCITY) * 100.0;
+    }
+
+    /**
+     * Checks if the indexer motor is currently moving.
+     *
+     * @return True if motor is busy
+     */
+    public boolean isIndexerBusy() {
+        return motor.isBusy();
+    }
+
+    /**
+     * Gets the current motor velocity (for debugging).
+     *
+     * @return Motor velocity in ticks per second
+     */
+    public double getIndexerVelocity() {
+        return motor.getVelocity();
+    }
+
+    /**
+     * Prepares next ball for ejection without actually ejecting.
+     * Moves to the eject position (60° mid-point).
+     *
+     * @param telemetry Telemetry object for debug output
+     * @return True if a ball was positioned, false if all slots are empty
+     */
+    public boolean prepareNextEject(Telemetry telemetry) {
+        // Find any non-empty ball
+        Integer nextBall = null;
+        for (int i = 0; i < 3; i++) {
+            if (slots[i] != Ball.EMPTY) {
+                nextBall = i;
+                break;
+            }
+        }
+
+        if (nextBall == null) {
+            return false; // No balls to prepare
+        }
+
+        // Align so targetSlot will be at eject position after +60°
+        int deltaSlots = mod3(nextBall - 1 - intakeIndex);
+        for (int k = 0; k < deltaSlots; k++) {
+            move120NoEject(telemetry);
+            intakeIndex = mod3(intakeIndex + 1);
+        }
+
+        // Move +60° to eject position
+        int mid = stepForward60();
+        goTo(mid, telemetry);
+        isAtMid = true;
+
+        return true;
+    }
+
+    /**
+     * Emergency stop - stops all motors immediately.
+     */
+    public void emergencyStop() {
+        motor.setPower(0);
+        shooterMotor.setPower(0);
+        cancelIntake();
     }
 }
