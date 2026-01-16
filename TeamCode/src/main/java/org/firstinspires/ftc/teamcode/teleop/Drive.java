@@ -70,6 +70,7 @@ public class Drive extends LinearOpMode {
         telemetry.addLine("Initialized! Ready to Start.");
         telemetry.update();
 
+        feedServo.setPosition(0);
         waitForStart();
         if (isStopRequested())
             return;
@@ -118,10 +119,10 @@ public class Drive extends LinearOpMode {
             }
 
             // Y: Auto Sort / Shoot (Execute Pattern)
-            if (yEdge) {
-                // This will start shooter, align balls, check colors, and fire
-                spindexer.ejectAllByPattern(telemetry);
-            }
+//            if (yEdge) {
+//                // This will start shooter, align balls, check colors, and fire
+//                spindexer.ejectAllByPattern(telemetry);
+//            }
 
             // B: Manual Eject (Current Slot)
             // Note: Spindexer doesn't have a public ejectCurrentSlot method that actuates

@@ -46,7 +46,7 @@ public class Spindexer {
     );
 
     // Feeder Servo constants
-    private static final double FEEDER_IDLE = 0.0;
+    private static final double FEEDER_IDLE = 0;
     private static final double FEEDER_EJECT = 0.5;
     private static final int FEEDER_SLEEP_MS = 250; // Delay for servo actuation
 
