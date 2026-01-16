@@ -7,6 +7,7 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.limelight.LimelightControl;
@@ -17,6 +18,7 @@ import org.firstinspires.ftc.teamcode.spindexer.Spindexer;
  * Advanced State-Machine Based Autonomous
  * Features: Concurrent operations, timeout protection, dynamic time management
  */
+@Disabled
 // @Autonomous(name = "Red_1_Advanced", group = "Autonomous") // DISABLED
 public class Red_1 extends LinearOpMode {
 
