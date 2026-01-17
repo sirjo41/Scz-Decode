@@ -15,7 +15,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class Spindexer {
 
     // Motor and encoder constants
-    private static final double CPR_MOTOR = 751.8; // TODO: Verify motor encoder CPR
+    private static final double CPR_MOTOR = 28; // TODO: Verify motor encoder CPR
     private static final double GEAR_RATIO = 1.0; // TODO: Tune based on actual gear ratio
     private static final double CPR_PLATE = CPR_MOTOR / GEAR_RATIO;
 
