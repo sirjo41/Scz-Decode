@@ -119,33 +119,25 @@ public class Drive extends LinearOpMode {
                 spindexer.emergencyStop();
             }
 
-            // DPad Down: Switch Mode (Intaking <-> Shooting)
+            // DPad Down: Switch Mode (Intaking <-> Shooting) and move half-slot
             if (dpDownEdge) {
                 if (spindexer.getMode() == Spindexer.SpindexerMode.INTAKING) {
                     spindexer.setMode(Spindexer.SpindexerMode.SHOOTING);
+                    spindexer.moveRightHalf(telemetry); // Move half-slot when switching to shooting
                 } else {
                     spindexer.setMode(Spindexer.SpindexerMode.INTAKING);
+                    spindexer.moveRightHalf(telemetry); // Move half-slot when switching to intaking
                 }
             }
 
-            // DPad Left: Move spindexer left (half-slot in shooting mode, full-slot in
-            // intaking)
+            // DPad Left: Move spindexer left (full-slot always)
             if (leftEdge) {
-                if (spindexer.getMode() == Spindexer.SpindexerMode.SHOOTING) {
-                    spindexer.moveLeftHalf(telemetry);
-                } else {
-                    spindexer.moveLeft(telemetry);
-                }
+                spindexer.moveLeft(telemetry);
             }
 
-            // DPad Right: Move spindexer right (half-slot in shooting mode, full-slot in
-            // intaking)
+            // DPad Right: Move spindexer right (full-slot always)
             if (rightEdge) {
-                if (spindexer.getMode() == Spindexer.SpindexerMode.SHOOTING) {
-                    spindexer.moveRightHalf(telemetry);
-                } else {
-                    spindexer.moveRight(telemetry);
-                }
+                spindexer.moveRight(telemetry);
             }
 
             // Update Pattern from Limelight (Auto-Detect)
