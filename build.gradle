@@ -1,29 +1,25 @@
 /**
  * Top-level build file for ftc_app project.
- *
- * It is extraordinarily rare that you will ever need to edit this file.
  */
 
 buildscript {
-     repositories {
-        mavenCentral()
-        google()
-    }
-    dependencies {
-        // Note for FTC Teams: Do not modify this yourself.
-        classpath 'com.android.tools.build:gradle:8.6.0'
-    }
-}
-
-// This is now required because aapt2 has to be downloaded from the
-// google() repository beginning with version 3.2 of the Android Gradle Plugin
-allprojects {
     repositories {
         mavenCentral()
         google()
     }
+    dependencies {
+        // Updated for 2026 compatibility with Android Studio Ladybug/Meerkat
+        classpath 'com.android.tools.build:gradle:8.6.0'
+    }
 }
 
-repositories {
-    mavenCentral()
+allprojects {
+    repositories {
+        mavenCentral()
+        google()
+        // PedroPathing 2026 repository
+        maven { url = 'https://maven.pedropathing.com' }
+        // ByLazar releases for 2026
+        maven { url = "https://mymaven.bylazar.com" }
+    }
 }
