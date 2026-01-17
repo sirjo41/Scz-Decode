@@ -37,6 +37,7 @@ public class Drive extends LinearOpMode {
     private boolean lastY = false;
     private boolean lastB = false;
     private boolean lastDpUp = false;
+    private boolean lastDpDown = false;
     private boolean lastRightBumper = false;
 
     @Override
@@ -96,10 +97,12 @@ public class Drive extends LinearOpMode {
             boolean leftEdge = gamepad1.dpad_left && !lastX;
             boolean rightEdge = gamepad1.dpad_right && !lastY;
             boolean dpUpEdge = gamepad1.dpad_up && !lastDpUp; // Cycle Pattern
+            boolean dpDownEdge = gamepad1.dpad_down && !lastDpDown; // Switch Mode
 
             lastX = gamepad1.dpad_left;
             lastY = gamepad1.dpad_right;
             lastDpUp = gamepad1.dpad_up;
+            lastDpDown = gamepad1.dpad_down;
 
             // A: Intake (Run Intake)
             if (gamepad1.a) {
@@ -116,14 +119,33 @@ public class Drive extends LinearOpMode {
                 spindexer.emergencyStop();
             }
 
-            // DPad Left: Move spindexer left
-            if (leftEdge) {
-                spindexer.moveLeft(telemetry);
+            // DPad Down: Switch Mode (Intaking <-> Shooting)
+            if (dpDownEdge) {
+                if (spindexer.getMode() == Spindexer.SpindexerMode.INTAKING) {
+                    spindexer.setMode(Spindexer.SpindexerMode.SHOOTING);
+                } else {
+                    spindexer.setMode(Spindexer.SpindexerMode.INTAKING);
+                }
             }
 
-            // DPad Right: Move spindexer right
+            // DPad Left: Move spindexer left (half-slot in shooting mode, full-slot in
+            // intaking)
+            if (leftEdge) {
+                if (spindexer.getMode() == Spindexer.SpindexerMode.SHOOTING) {
+                    spindexer.moveLeftHalf(telemetry);
+                } else {
+                    spindexer.moveLeft(telemetry);
+                }
+            }
+
+            // DPad Right: Move spindexer right (half-slot in shooting mode, full-slot in
+            // intaking)
             if (rightEdge) {
-                spindexer.moveRight(telemetry);
+                if (spindexer.getMode() == Spindexer.SpindexerMode.SHOOTING) {
+                    spindexer.moveRightHalf(telemetry);
+                } else {
+                    spindexer.moveRight(telemetry);
+                }
             }
 
             // Update Pattern from Limelight (Auto-Detect)
@@ -171,6 +193,7 @@ public class Drive extends LinearOpMode {
 
             // === 4. Telemetry ===
             telemetry.addLine("--- Spindexer State ---");
+            telemetry.addData("Mode", spindexer.getMode());
             telemetry.addData("Pattern", spindexer.getGamePattern());
             telemetry.addData("Detected Tag Pattern", detected);
             telemetry.addData("Encoder", spindexer.getEncoder());
@@ -186,6 +209,7 @@ public class Drive extends LinearOpMode {
             telemetry.addLine("A: Run Intake");
             telemetry.addLine("DPad Left/Right: Move Spindexer");
             telemetry.addLine("DPad Up: Cycle Pattern");
+            telemetry.addLine("DPad Down: Switch Mode (Intaking/Shooting)");
             telemetry.addLine("Right Trigger: Spin Up Shooter");
             telemetry.addLine("Right Bumper: Shoot");
             telemetry.addLine("B: KILL SHOOTER");

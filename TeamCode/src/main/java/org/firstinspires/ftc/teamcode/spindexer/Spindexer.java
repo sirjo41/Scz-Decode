@@ -17,7 +17,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 @Configurable
 public class Spindexer {
 
-
     // Motor and encoder constants
     private static final double CPR_MOTOR = 28; // TODO: Verify motor encoder CPR
     private static final double GEAR_RATIO = 1.0; // TODO: Tune based on actual gear ratio
@@ -70,6 +69,14 @@ public class Spindexer {
         UNKNOWN
     }
 
+    /**
+     * Spindexer mode enumeration.
+     */
+    public enum SpindexerMode {
+        INTAKING,
+        SHOOTING
+    }
+
     // Hardware components
     private final DcMotorEx motor;
     private final ColorSensor colorSensor;
@@ -90,6 +97,9 @@ public class Spindexer {
 
     // Game pattern
     private GamePattern pattern = GamePattern.GREEN_FIRST;
+
+    // Spindexer mode
+    private SpindexerMode mode = SpindexerMode.INTAKING;
 
     /**
      * Constructor - Initializes the spindexer with motor and intake system.
@@ -158,6 +168,40 @@ public class Spindexer {
         accum += TICKS_PER_SLOT;
         int target = (int) Math.rint(zeroCount + accum);
         goTo(target, telemetry);
+    }
+
+    /**
+     * Move left (counter-clockwise) by half a slot (for shooting mode).
+     */
+    public void moveLeftHalf(Telemetry telemetry) {
+        feederServo.setPosition(FEEDER_IDLE);
+        accum -= TICKS_PER_SLOT / 2.0;
+        int target = (int) Math.rint(zeroCount + accum);
+        goTo(target, telemetry);
+    }
+
+    /**
+     * Move right (clockwise) by half a slot (for shooting mode).
+     */
+    public void moveRightHalf(Telemetry telemetry) {
+        feederServo.setPosition(FEEDER_IDLE);
+        accum += TICKS_PER_SLOT / 2.0;
+        int target = (int) Math.rint(zeroCount + accum);
+        goTo(target, telemetry);
+    }
+
+    /**
+     * Gets the current spindexer mode.
+     */
+    public SpindexerMode getMode() {
+        return mode;
+    }
+
+    /**
+     * Sets the spindexer mode.
+     */
+    public void setMode(SpindexerMode mode) {
+        this.mode = mode;
     }
 
     /**
