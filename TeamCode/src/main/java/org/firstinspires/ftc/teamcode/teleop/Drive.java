@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.limelight.LimelightControl;
 import org.firstinspires.ftc.teamcode.spindexer.Spindexer;
@@ -23,6 +24,8 @@ public class Drive extends LinearOpMode {
     private static final String SPINDEXER_MOTOR = "spindexer";
     private static final String COLOR_SENSOR = "shooterColor";
     private static final String INTAKE_MOTOR = "intake";
+    private static final String FEEDER_SERVO = "feeder";
+    private static final String SHOOTER_MOTOR = "shooter";
 
     // Subsystems
     private Spindexer spindexer;
@@ -34,6 +37,7 @@ public class Drive extends LinearOpMode {
     private boolean lastY = false;
     private boolean lastB = false;
     private boolean lastDpUp = false;
+    private boolean lastRightBumper = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -51,7 +55,9 @@ public class Drive extends LinearOpMode {
         // Spindexer System
         DcMotorEx spinMotor = hardwareMap.get(DcMotorEx.class, SPINDEXER_MOTOR);
         ColorSensor colorSensor = hardwareMap.get(ColorSensor.class, COLOR_SENSOR);
-        spindexer = new Spindexer(this, spinMotor, colorSensor);
+        Servo feederServo = hardwareMap.get(Servo.class, FEEDER_SERVO);
+        DcMotorEx shooterMotor = hardwareMap.get(DcMotorEx.class, SHOOTER_MOTOR);
+        spindexer = new Spindexer(this, spinMotor, colorSensor, feederServo, shooterMotor);
 
         // Intake Motor
         intake = hardwareMap.get(DcMotor.class, INTAKE_MOTOR);
@@ -133,7 +139,36 @@ public class Drive extends LinearOpMode {
                 spindexer.setGamePattern(patterns[nextIdx]);
             }
 
-            // === 3. Telemetry ===
+            // === 3. Shooter Control (Gamepad 1) ===
+
+            boolean rightBumperEdge = gamepad1.right_bumper && !lastRightBumper;
+            lastRightBumper = gamepad1.right_bumper;
+
+            // Right Trigger: Spin up shooter
+            if (gamepad1.right_trigger > 0.1) {
+                spindexer.spinUpShooter();
+            } else {
+                // If not spinning up, allow natural slowdown
+                // Don't actively stop to maintain momentum
+            }
+
+            // Right Bumper: Shoot (feed ball when ready)
+            if (rightBumperEdge) {
+                boolean fed = spindexer.shoot();
+                if (!fed) {
+                    // Could add haptic feedback or telemetry warning
+                }
+            } else if (!gamepad1.right_bumper) {
+                // Retract feeder when button released
+                spindexer.retractFeeder();
+            }
+
+            // B Button: Kill switch - emergency stop shooter
+            if (gamepad1.b) {
+                spindexer.stopShooter();
+            }
+
+            // === 4. Telemetry ===
             telemetry.addLine("--- Spindexer State ---");
             telemetry.addData("Pattern", spindexer.getGamePattern());
             telemetry.addData("Detected Tag Pattern", detected);
@@ -143,10 +178,16 @@ public class Drive extends LinearOpMode {
             // Add slot telemetry
             spindexer.addSlotTelemetry(telemetry);
 
+            // Add shooter telemetry
+            spindexer.addShooterTelemetry(telemetry);
+
             telemetry.addLine("\n--- Controls ---");
             telemetry.addLine("A: Run Intake");
             telemetry.addLine("DPad Left/Right: Move Spindexer");
             telemetry.addLine("DPad Up: Cycle Pattern");
+            telemetry.addLine("Right Trigger: Spin Up Shooter");
+            telemetry.addLine("Right Bumper: Shoot");
+            telemetry.addLine("B: KILL SHOOTER");
             telemetry.addLine("BACK: Emergency Stop Spindexer");
 
             telemetry.update();

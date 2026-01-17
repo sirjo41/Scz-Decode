@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.spindexer;
 
+import com.arcrobotics.ftclib.controller.PIDFController;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -35,6 +36,20 @@ public class Spindexer {
     private static final int TARGET_TOL = 1; // TODO: Tune position tolerance
     private static final double MAX_POWER = 1; // TODO: Tune max motor power
 
+    // Shooter constants
+    public static final double TARGET_SHOOTER_RPM = 3000; // TODO: Tune target shooter velocity
+    private static final double SHOOTER_VELOCITY_TOLERANCE = 50; // RPM tolerance for "ready" state
+
+    // Shooter PID coefficients
+    public static final double SHOOTER_P = 0.0001; // TODO: Tune shooter P coefficient
+    public static final double SHOOTER_I = 0.0; // TODO: Tune shooter I coefficient
+    public static final double SHOOTER_D = 0.0; // TODO: Tune shooter D coefficient
+    public static final double SHOOTER_F = 0.0; // TODO: Tune shooter F coefficient
+
+    // Servo positions
+    private static final double FEEDER_IDLE = 1.0;
+    private static final double FEEDER_FEEDING = 0.55;
+
     /**
      * Game pattern enumeration.
      */
@@ -58,6 +73,9 @@ public class Spindexer {
     private final DcMotorEx motor;
     private final ColorSensor colorSensor;
     private final LinearOpMode opMode;
+    private final Servo feederServo;
+    private final DcMotorEx shooterMotor;
+    private final PIDFController shooterPID;
 
     // State tracking
     private int zeroCount = 0;
@@ -76,10 +94,12 @@ public class Spindexer {
      * Constructor - Initializes the spindexer with motor and intake system.
      */
     public Spindexer(LinearOpMode opMode, DcMotorEx motor,
-            ColorSensor colorSensor) {
+            ColorSensor colorSensor, Servo feederServo, DcMotorEx shooterMotor) {
         this.opMode = opMode;
         this.motor = motor;
         this.colorSensor = colorSensor;
+        this.feederServo = feederServo;
+        this.shooterMotor = shooterMotor;
 
         // Configure motor for position control
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -105,6 +125,18 @@ public class Spindexer {
         for (int i = 0; i < slots.length; i++) {
             slots[i] = SlotColor.EMPTY;
         }
+
+        // Initialize feeder servo to idle position
+        feederServo.setPosition(FEEDER_IDLE);
+
+        // Initialize shooter motor
+        shooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        shooterMotor.setPower(0);
+
+        // Initialize PID controller for shooter velocity
+        shooterPID = new PIDFController(SHOOTER_P, SHOOTER_I, SHOOTER_D, SHOOTER_F);
+        shooterPID.setTolerance(SHOOTER_VELOCITY_TOLERANCE);
     }
 
     /**
@@ -276,5 +308,78 @@ public class Spindexer {
      */
     public void emergencyStop() {
         motor.setPower(0);
+        stopShooter();
+    }
+
+    // ==================== SHOOTER METHODS ====================
+
+    /**
+     * Spins up the shooter motor to target velocity.
+     */
+    public void spinUpShooter() {
+        double targetVelocity = TARGET_SHOOTER_RPM;
+        double currentVelocity = getShooterRPM();
+
+        double power = shooterPID.calculate(currentVelocity, targetVelocity);
+        // Add feedforward term
+        power += SHOOTER_F * targetVelocity;
+
+        shooterMotor.setPower(Math.max(0, Math.min(1, power)));
+    }
+
+    /**
+     * Stops the shooter motor.
+     */
+    public void stopShooter() {
+        shooterMotor.setPower(0);
+        feederServo.setPosition(FEEDER_IDLE);
+    }
+
+    /**
+     * Gets the current shooter velocity in RPM.
+     */
+    public double getShooterRPM() {
+        double ticksPerSecond = shooterMotor.getVelocity();
+        // Assuming 28 CPR motor (e.g., REV HD Hex Motor)
+        // Adjust CPR_MOTOR constant if using different motor
+        return (ticksPerSecond / CPR_MOTOR) * 60.0;
+    }
+
+    /**
+     * Checks if shooter is at target velocity and ready to shoot.
+     */
+    public boolean isShooterReady() {
+        double currentVelocity = getShooterRPM();
+        return Math.abs(currentVelocity - TARGET_SHOOTER_RPM) < SHOOTER_VELOCITY_TOLERANCE;
+    }
+
+    /**
+     * Feeds a ball into the shooter when ready.
+     * Returns true if fed, false if shooter not ready.
+     */
+    public boolean shoot() {
+        if (isShooterReady()) {
+            feederServo.setPosition(FEEDER_FEEDING);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Resets feeder to idle position.
+     */
+    public void retractFeeder() {
+        feederServo.setPosition(FEEDER_IDLE);
+    }
+
+    /**
+     * Adds shooter telemetry data.
+     */
+    public void addShooterTelemetry(Telemetry telemetry) {
+        telemetry.addLine("=== Shooter State ===");
+        telemetry.addData("Target RPM", TARGET_SHOOTER_RPM);
+        telemetry.addData("Current RPM", String.format("%.0f", getShooterRPM()));
+        telemetry.addData("Shooter Ready", isShooterReady() ? "YES" : "NO");
+        telemetry.addData("Feeder Position", String.format("%.2f", feederServo.getPosition()));
     }
 }
