@@ -24,11 +24,11 @@ public class Spindexer {
     private static final double CPR_PLATE = CPR_MOTOR / GEAR_RATIO;
 
     // Rotation constants
-    public static final double TICKS_PER_SLOT = 462;// TODO: Tune number of slots (currently 3)
+    public static final double TICKS_PER_SLOT = 475;// TODO: Tune number of slots (currently 3)
 
     // PID coefficients for position control
     public static final PIDFCoefficients POS_PIDF = new PIDFCoefficients(
-            20, // TODO: Tune P coefficient
+            12, // TODO: Tune P coefficient
             0, // TODO: Tune I coefficient
             0.15, // TODO: Tune D coefficient
             0.0); // TODO: Tune F coefficient
