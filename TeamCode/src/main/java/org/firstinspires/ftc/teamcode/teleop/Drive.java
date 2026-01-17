@@ -59,6 +59,7 @@ public class Drive extends LinearOpMode {
         ColorSensor colorSensor = hardwareMap.get(ColorSensor.class, COLOR_SENSOR);
         Servo feederServo = hardwareMap.get(Servo.class, FEEDER_SERVO);
         DcMotorEx shooterMotor = hardwareMap.get(DcMotorEx.class, SHOOTER_MOTOR);
+        shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         spindexer = new Spindexer(this, spinMotor, colorSensor, feederServo, shooterMotor);
 
         // Intake Motor
