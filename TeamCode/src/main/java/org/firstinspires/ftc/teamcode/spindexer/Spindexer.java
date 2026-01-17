@@ -1,7 +1,8 @@
 package org.firstinspires.ftc.teamcode.spindexer;
 
-import com.arcrobotics.ftclib.controller.PIDFController;
+import com.ftclib.controller.PIDFController;
 import com.bylazar.configurables.annotations.Configurable;
+import com.pedropathing.control.PIDFController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -17,6 +18,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 @Configurable
 public class Spindexer {
 
+    
     // Motor and encoder constants
     private static final double CPR_MOTOR = 28; // TODO: Verify motor encoder CPR
     private static final double GEAR_RATIO = 1.0; // TODO: Tune based on actual gear ratio
