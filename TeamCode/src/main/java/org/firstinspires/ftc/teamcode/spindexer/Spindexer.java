@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -34,9 +33,6 @@ public class Spindexer {
     private static final int TARGET_TOL = 2; // TODO: Tune position tolerance
     private static final double MAX_POWER = 0.6; // TODO: Tune max motor power
 
-    // Intake system parameters
-    private static final double DISTANCE_THRESHOLD = 5.0; // TODO: Tune distance detection threshold (cm)
-
     /**
      * Game pattern enumeration.
      */
@@ -59,7 +55,6 @@ public class Spindexer {
     // Hardware components
     private final DcMotorEx motor;
     private final ColorSensor colorSensor;
-    private final DistanceSensor distanceSensor;
     private final LinearOpMode opMode;
 
     // State tracking
@@ -70,7 +65,7 @@ public class Spindexer {
     // Intake state tracking
     private final SlotColor[] slots = new SlotColor[3];
     private int currentSlotIndex = 0;
-    private boolean lastDistanceDetected = false;
+    private boolean lastColorDetected = false;
 
     // Game pattern
     private GamePattern pattern = GamePattern.GREEN_FIRST;
@@ -79,11 +74,10 @@ public class Spindexer {
      * Constructor - Initializes the spindexer with motor and intake system.
      */
     public Spindexer(LinearOpMode opMode, DcMotorEx motor,
-            ColorSensor colorSensor, DistanceSensor distanceSensor) {
+            ColorSensor colorSensor) {
         this.opMode = opMode;
         this.motor = motor;
         this.colorSensor = colorSensor;
-        this.distanceSensor = distanceSensor;
 
         // Configure motor for position control
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -222,18 +216,17 @@ public class Spindexer {
     }
 
     /**
-     * Updates intake system - checks distance sensor and stores color if object
+     * Updates intake system - checks color sensor and stores color if object
      * detected.
      * Call this periodically in your main loop.
      */
     public void updateIntake() {
-        double distance = distanceSensor.getDistance(DistanceUnit.CM);
-        boolean objectDetected = distance < DISTANCE_THRESHOLD;
+        SlotColor detectedColor = detectColor();
 
-        // Detect rising edge - object just entered sensor range
-        if (objectDetected && !lastDistanceDetected) {
-            SlotColor detectedColor = detectColor();
+        // Detect rising edge - color changed from EMPTY/UNKNOWN to a valid color
+        boolean objectDetected = (detectedColor == SlotColor.PURPLE || detectedColor == SlotColor.GREEN);
 
+        if (objectDetected && !lastColorDetected) {
             // Store color in current slot and advance to next slot
             if (currentSlotIndex < slots.length) {
                 slots[currentSlotIndex] = detectedColor;
@@ -241,7 +234,7 @@ public class Spindexer {
             }
         }
 
-        lastDistanceDetected = objectDetected;
+        lastColorDetected = objectDetected;
     }
 
     /**
@@ -273,7 +266,7 @@ public class Spindexer {
             telemetry.addData("Slot " + i, slots[i]);
         }
         telemetry.addData("Next Slot", currentSlotIndex);
-        telemetry.addData("Distance (cm)", distanceSensor.getDistance(DistanceUnit.CM));
+        telemetry.addData("Current Color", detectColor());
     }
 
     /**

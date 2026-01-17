@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -20,6 +21,7 @@ public class Drive extends LinearOpMode {
 
     // Spindexer & Intake Hardware
     private static final String SPINDEXER_MOTOR = "spindexer";
+    private static final String COLOR_SENSOR = "colorSensor";
     private static final String INTAKE_MOTOR = "intake";
 
     // Subsystems
@@ -48,7 +50,8 @@ public class Drive extends LinearOpMode {
 
         // Spindexer System
         DcMotorEx spinMotor = hardwareMap.get(DcMotorEx.class, SPINDEXER_MOTOR);
-        spindexer = new Spindexer(this, spinMotor);
+        ColorSensor colorSensor = hardwareMap.get(ColorSensor.class, COLOR_SENSOR);
+        spindexer = new Spindexer(this, spinMotor, colorSensor);
 
         // Intake Motor
         intake = hardwareMap.get(DcMotor.class, INTAKE_MOTOR);
