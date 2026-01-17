@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.spindexer;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -12,6 +13,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 /**
  * Spindexer - Simplified rotary indexer for left/right movement.
  */
+@Configurable
 public class Spindexer {
 
     // Motor and encoder constants
@@ -20,10 +22,10 @@ public class Spindexer {
     private static final double CPR_PLATE = CPR_MOTOR / GEAR_RATIO;
 
     // Rotation constants
-    private static final double TICKS_PER_SLOT = 500;// TODO: Tune number of slots (currently 3)
+    public static final double TICKS_PER_SLOT = 495;// TODO: Tune number of slots (currently 3)
 
     // PID coefficients for position control
-    private static final PIDFCoefficients POS_PIDF = new PIDFCoefficients(
+    public static final PIDFCoefficients POS_PIDF = new PIDFCoefficients(
             8.0, // TODO: Tune P coefficient
             0.0, // TODO: Tune I coefficient
             0.6, // TODO: Tune D coefficient
