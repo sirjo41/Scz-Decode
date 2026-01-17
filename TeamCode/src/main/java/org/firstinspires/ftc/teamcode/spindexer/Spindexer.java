@@ -26,8 +26,8 @@ public class Spindexer {
 
     // PID coefficients for position control
     public static final PIDFCoefficients POS_PIDF = new PIDFCoefficients(
-            10.5, // TODO: Tune P coefficient
-            0.0, // TODO: Tune I coefficient
+            20, // TODO: Tune P coefficient
+            0, // TODO: Tune I coefficient
             0.15, // TODO: Tune D coefficient
             0.0); // TODO: Tune F coefficient
 
