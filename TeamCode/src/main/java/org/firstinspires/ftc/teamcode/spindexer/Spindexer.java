@@ -403,11 +403,12 @@ public class Spindexer {
     }
 
     /**
-     * Feeds a ball into the shooter when ready.
-     * Returns true if fed, false if shooter not ready.
+     * Feeds a ball into the shooter when ready and in SHOOTING mode.
+     * Returns true if fed, false if shooter not ready or not in shooting mode.
      */
     public boolean shoot() {
-        if (isShooterReady()) {
+        // Only shoot if in SHOOTING mode AND shooter is ready
+        if (mode == SpindexerMode.SHOOTING && isShooterReady()) {
             feederServo.setPosition(FEEDER_FEEDING);
             return true;
         }
