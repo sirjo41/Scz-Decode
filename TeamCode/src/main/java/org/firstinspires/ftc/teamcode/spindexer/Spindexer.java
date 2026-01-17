@@ -47,7 +47,7 @@ public class Spindexer {
      */
     public enum SlotColor {
         EMPTY,
-        PURBLE,
+        PURPLE,
         GREEN,
         UNKNOWN
     }
