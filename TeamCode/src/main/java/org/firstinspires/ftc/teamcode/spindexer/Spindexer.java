@@ -1,8 +1,7 @@
 package org.firstinspires.ftc.teamcode.spindexer;
 
-import com.ftclib.controller.PIDFController;
+import com.arcrobotics.ftclib.controller.PIDFController;
 import com.bylazar.configurables.annotations.Configurable;
-import com.pedropathing.control.PIDFController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -18,7 +17,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 @Configurable
 public class Spindexer {
 
-    
+
     // Motor and encoder constants
     private static final double CPR_MOTOR = 28; // TODO: Verify motor encoder CPR
     private static final double GEAR_RATIO = 1.0; // TODO: Tune based on actual gear ratio
@@ -43,9 +42,9 @@ public class Spindexer {
     private static final double SHOOTER_VELOCITY_TOLERANCE = 50; // RPM tolerance for "ready" state
 
     // Shooter PID coefficients
-    public static final double SHOOTER_P = 0.0001; // TODO: Tune shooter P coefficient
+    public static final double SHOOTER_P = 1; // TODO: Tune shooter P coefficient
     public static final double SHOOTER_I = 0.0; // TODO: Tune shooter I coefficient
-    public static final double SHOOTER_D = 0.0; // TODO: Tune shooter D coefficient
+    public static final double SHOOTER_D = 0.15; // TODO: Tune shooter D coefficient
     public static final double SHOOTER_F = 0.0; // TODO: Tune shooter F coefficient
 
     // Servo positions
@@ -77,7 +76,7 @@ public class Spindexer {
     private final LinearOpMode opMode;
     private final Servo feederServo;
     private final DcMotorEx shooterMotor;
-    private final PIDFController shooterPID;
+    private final com.arcrobotics.ftclib.controller.PIDFController shooterPID;
 
     // State tracking
     private int zeroCount = 0;
@@ -145,6 +144,7 @@ public class Spindexer {
      * Move left (counter-clockwise) by one slot.
      */
     public void moveLeft(Telemetry telemetry) {
+        feederServo.setPosition(FEEDER_IDLE);
         accum -= TICKS_PER_SLOT;
         int target = (int) Math.rint(zeroCount + accum);
         goTo(target, telemetry);
@@ -154,6 +154,7 @@ public class Spindexer {
      * Move right (clockwise) by one slot.
      */
     public void moveRight(Telemetry telemetry) {
+        feederServo.setPosition(FEEDER_IDLE);
         accum += TICKS_PER_SLOT;
         int target = (int) Math.rint(zeroCount + accum);
         goTo(target, telemetry);
@@ -200,6 +201,7 @@ public class Spindexer {
      * Sets the target position and configures motor for movement.
      */
     private void setTarget(int t) {
+        feederServo.setPosition(FEEDER_IDLE);
         targetCounts = t;
         motor.setTargetPosition(targetCounts);
         if (motor.getMode() != DcMotor.RunMode.RUN_TO_POSITION) {
@@ -212,6 +214,7 @@ public class Spindexer {
      * Moves to target position and blocks until complete.
      */
     private void goTo(int t, Telemetry telemetry) {
+        feederServo.setPosition(FEEDER_IDLE);
         setTarget(t);
         while (opModeIsActive() && motor.isBusy()) {
             motor.setPower(MAX_POWER);
