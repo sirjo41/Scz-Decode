@@ -382,15 +382,15 @@ public class Spindexer {
             if (currentSlotIndex < slots.length) {
                 slots[currentSlotIndex] = detectedColor;
                 currentSlotIndex = (currentSlotIndex + 1) % slots.length;
-                if (currentSlotIndex < 3) {
+
+                // Prioritize checking if full to switch mode
+                if (isFull()) {
+                    mode = SpindexerMode.SHOOTING;
+                    moveRightHalf(this.opMode.telemetry); // Enter shooting position 1.5
+                    shootingState = ShootingState.SEARCHING; // Start sorting
+                } else {
+                    // Not full yet, just move to next slot
                     moveRight(this.opMode.telemetry);
-                } else if (!isShooterReady() && currentSlotIndex == 0) { // Index wrapped to 0, means 3 slots filled
-                    // Check if actually full just in case
-                    if (isFull()) {
-                        mode = SpindexerMode.SHOOTING;
-                        moveRightHalf(this.opMode.telemetry); // Enter shooting position 1.5
-                        shootingState = ShootingState.SEARCHING; // Start sorting
-                    }
                 }
             }
         }
