@@ -6,10 +6,11 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 /**
  * Spindexer - Simplified rotary indexer for left/right movement.
@@ -79,7 +80,7 @@ public class Spindexer {
 
     // Hardware components
     private final DcMotorEx motor;
-    private final ColorSensor colorSensor;
+    private final NormalizedColorSensor intakeSensor;
     private final LinearOpMode opMode;
     private final Servo feederServo;
     private final DcMotorEx shooterMotor;
@@ -105,10 +106,10 @@ public class Spindexer {
      * Constructor - Initializes the spindexer with motor and intake system.
      */
     public Spindexer(LinearOpMode opMode, DcMotorEx motor,
-            ColorSensor colorSensor, Servo feederServo, DcMotorEx shooterMotor) {
+                     NormalizedColorSensor intakeSensor, Servo feederServo, DcMotorEx shooterMotor) {
         this.opMode = opMode;
         this.motor = motor;
-        this.colorSensor = colorSensor;
+        this.intakeSensor = intakeSensor ;
         this.feederServo = feederServo;
         this.shooterMotor = shooterMotor;
 
@@ -283,16 +284,13 @@ public class Spindexer {
      * Detects color from sensor RGB values.
      */
     private SlotColor detectColor() {
-        int red = colorSensor.red();
-        int green = colorSensor.green();
-        int blue = colorSensor.blue();
-
+        NormalizedRGBA colors = this.intakeSensor.getNormalizedColors();
         // TODO: Tune these color thresholds based on your sensor and lighting
-        if (red > green && red > blue && red > 100) {
-            return SlotColor.PURPLE;
-        } else if (green > red && green > blue && green > 100) {
+        if (colors.red < 50 && colors.green < 50 && colors.blue < 50) {
+            return SlotColor.EMPTY;
+        } else if (colors.green > colors.red && colors.green > colors.blue) {
             return SlotColor.GREEN;
-        } else if (red < 50 && green < 50 && blue < 50) {
+        } else if (colors.red > colors.green && colors.blue > colors.green) {
             return SlotColor.EMPTY;
         }
         return SlotColor.UNKNOWN;
@@ -314,6 +312,7 @@ public class Spindexer {
             if (currentSlotIndex < slots.length) {
                 slots[currentSlotIndex] = detectedColor;
                 currentSlotIndex = (currentSlotIndex + 1) % slots.length;
+                moveRight(this.opMode.telemetry);
             }
         }
 
@@ -408,7 +407,7 @@ public class Spindexer {
      */
     public boolean shoot() {
         // Only shoot if in SHOOTING mode AND shooter is ready
-        if (mode == SpindexerMode.SHOOTING && isShooterReady()) {
+        if (mode == SpindexerMode.SHOOTING) {
             feederServo.setPosition(FEEDER_FEEDING);
             return true;
         }

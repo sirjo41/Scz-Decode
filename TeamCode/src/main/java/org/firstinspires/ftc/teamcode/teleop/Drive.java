@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.limelight.LimelightControl;
@@ -56,11 +57,11 @@ public class Drive extends LinearOpMode {
 
         // Spindexer System
         DcMotorEx spinMotor = hardwareMap.get(DcMotorEx.class, SPINDEXER_MOTOR);
-        ColorSensor colorSensor = hardwareMap.get(ColorSensor.class, COLOR_SENSOR);
+        NormalizedColorSensor intakeSensor = hardwareMap.get(NormalizedColorSensor .class, COLOR_SENSOR);
         Servo feederServo = hardwareMap.get(Servo.class, FEEDER_SERVO);
         DcMotorEx shooterMotor = hardwareMap.get(DcMotorEx.class, SHOOTER_MOTOR);
         shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        spindexer = new Spindexer(this, spinMotor, colorSensor, feederServo, shooterMotor);
+        spindexer = new Spindexer(this, spinMotor, intakeSensor, feederServo, shooterMotor);
 
         // Intake Motor
         intake = hardwareMap.get(DcMotor.class, INTAKE_MOTOR);
