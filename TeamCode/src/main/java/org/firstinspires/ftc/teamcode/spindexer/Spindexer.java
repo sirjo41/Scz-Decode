@@ -102,6 +102,18 @@ public class Spindexer {
     // Spindexer mode
     private SpindexerMode mode = SpindexerMode.INTAKING;
 
+    // Shooting state
+    public enum ShootingState {
+        SEARCHING,
+        MOVING,
+        READY_TO_SHOOT,
+        SHOOTING_ACTION,
+        COOLDOWN
+    }
+
+    private ShootingState shootingState = ShootingState.SEARCHING;
+    private long shootTimer = 0;
+
     private int ballsShotCount = 0;
 
     /**
