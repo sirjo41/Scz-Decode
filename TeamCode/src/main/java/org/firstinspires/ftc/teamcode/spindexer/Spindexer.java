@@ -113,6 +113,7 @@ public class Spindexer {
         this.feederServo = feederServo;
         this.shooterMotor = shooterMotor;
 
+
         // Configure motor for position control
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor.setTargetPosition(0);
@@ -284,7 +285,7 @@ public class Spindexer {
      * Detects color from sensor RGB values.
      */
     private SlotColor detectColor() {
-        NormalizedRGBA colors = this.intakeSensor.getNormalizedColors();
+        NormalizedRGBA colors = intakeSensor.getNormalizedColors();
         // TODO: Tune these color thresholds based on your sensor and lighting
         if (colors.red < 50 && colors.green < 50 && colors.blue < 50) {
             return SlotColor.EMPTY;
