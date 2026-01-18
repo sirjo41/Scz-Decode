@@ -312,7 +312,7 @@ public class Spindexer {
             if (currentSlotIndex < slots.length) {
                 slots[currentSlotIndex] = detectedColor;
                 currentSlotIndex = (currentSlotIndex + 1) % slots.length;
-                moveRight(this.opMode.telemetry);
+                //moveRight(this.opMode.telemetry);
             }
         }
 
