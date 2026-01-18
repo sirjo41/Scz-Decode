@@ -314,10 +314,11 @@ public class Spindexer {
             if (currentSlotIndex < slots.length) {
                 slots[currentSlotIndex] = detectedColor;
                 currentSlotIndex = (currentSlotIndex + 1) % slots.length;
-                if(currentSlotIndex < 2){
+                if(currentSlotIndex < 3){
                     moveRight(this.opMode.telemetry);
-                } else if (!isShooterReady() &&  currentSlotIndex == 2){
+                } else if (!isShooterReady() &&  currentSlotIndex == 3){
                     moveRightHalf(this.opMode.telemetry);
+                    mode = SpindexerMode.SHOOTING;
                 }
             }
         }
