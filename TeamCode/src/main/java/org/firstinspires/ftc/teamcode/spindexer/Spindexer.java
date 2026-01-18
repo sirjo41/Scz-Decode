@@ -314,9 +314,9 @@ public class Spindexer {
             if (currentSlotIndex < slots.length) {
                 slots[currentSlotIndex] = detectedColor;
                 currentSlotIndex = (currentSlotIndex + 1) % slots.length;
-                if(slots.length < 2){
+                if(currentSlotIndex < 2){
                     moveRight(this.opMode.telemetry);
-                } else if (!isShooterReady() &&  slots.length == 2){
+                } else if (!isShooterReady() &&  currentSlotIndex == 2){
                     moveRightHalf(this.opMode.telemetry);
                 }
             }
