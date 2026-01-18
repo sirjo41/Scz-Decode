@@ -102,17 +102,57 @@ public class Spindexer {
     // Spindexer mode
     private SpindexerMode mode = SpindexerMode.INTAKING;
 
+    private int ballsShotCount = 0;
+
+    /**
+     * Checks if the spindexer is full (all 3 slots have balls).
+     */
+    public boolean isFull() {
+        for (SlotColor slot : slots) {
+            if (slot == SlotColor.EMPTY) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Finds the relative index of the next slot containing the specified color.
+     * Searches starting from the current slot index.
+     * Returns -1 if not found.
+     */
+    public int getNextSlotWithColor(SlotColor color) {
+        // Start check at currentSlotIndex, effectively the "0" point relative to
+        // shooter if aligned
+        // We need to check all 3 slots
+        for (int i = 0; i < slots.length; i++) {
+            // (current + i) % 3 loops 0 -> 1 -> 2 relative to current
+            int checkIndex = (currentSlotIndex + i) % slots.length;
+            if (slots[checkIndex] == color) {
+                return i; // Return the relative offset (0, 1, or 2)
+            }
+        }
+        return -1;
+    }
+
+    public int getBallsShotCount() {
+        return ballsShotCount;
+    }
+
+    public void resetShotCount() {
+        ballsShotCount = 0;
+    }
+
     /**
      * Constructor - Initializes the spindexer with motor and intake system.
      */
     public Spindexer(LinearOpMode opMode, DcMotorEx motor,
-                     NormalizedColorSensor intakeSensor, Servo feederServo, DcMotorEx shooterMotor) {
+            NormalizedColorSensor intakeSensor, Servo feederServo, DcMotorEx shooterMotor) {
         this.opMode = opMode;
         this.motor = motor;
-        this.intakeSensor = intakeSensor ;
+        this.intakeSensor = intakeSensor;
         this.feederServo = feederServo;
         this.shooterMotor = shooterMotor;
-
 
         // Configure motor for position control
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -204,6 +244,10 @@ public class Spindexer {
      */
     public void setMode(SpindexerMode mode) {
         this.mode = mode;
+        if (mode == SpindexerMode.SHOOTING) {
+            shootingState = ShootingState.SEARCHING;
+            ballsShotCount = 0; // Reset count on manual entry? Maybe.
+        }
     }
 
     /**
@@ -287,11 +331,11 @@ public class Spindexer {
     private SlotColor detectColor() {
         NormalizedRGBA colors = intakeSensor.getNormalizedColors();
         // TODO: Tune these color thresholds based on your sensor and lighting
-        if(colors.green <0.0030 && colors.blue < 0.0030){
+        if (colors.green < 0.0030 && colors.blue < 0.0030) {
             return SlotColor.EMPTY;
-        } else if(colors.green > colors.blue) {
+        } else if (colors.green > colors.blue) {
             return SlotColor.GREEN;
-        } else if (colors.blue > colors.green) { //colors.red > colors.green &&
+        } else if (colors.blue > colors.green) { // colors.red > colors.green &&
             return SlotColor.PURPLE;
         } else {
             return SlotColor.EMPTY;
@@ -304,25 +348,121 @@ public class Spindexer {
      * Call this periodically in your main loop.
      */
     public void updateIntake() {
+        if (mode == SpindexerMode.SHOOTING) {
+            updateAutoShoot();
+            return;
+        }
+
         SlotColor detectedColor = detectColor();
 
         // Detect rising edge - color changed from EMPTY/UNKNOWN to a valid color
         boolean objectDetected = (detectedColor == SlotColor.PURPLE || detectedColor == SlotColor.GREEN);
 
-        if (objectDetected ) {
+        if (objectDetected) {
             // Store color in current slot and advance to next slot
             if (currentSlotIndex < slots.length) {
                 slots[currentSlotIndex] = detectedColor;
                 currentSlotIndex = (currentSlotIndex + 1) % slots.length;
-                if(currentSlotIndex < 3){
+                if (currentSlotIndex < 3) {
                     moveRight(this.opMode.telemetry);
-                } else if (!isShooterReady() &&  currentSlotIndex == 3){
-                    moveRightHalf(this.opMode.telemetry);
-                    mode = SpindexerMode.SHOOTING;
+                } else if (!isShooterReady() && currentSlotIndex == 0) { // Index wrapped to 0, means 3 slots filled
+                    // Check if actually full just in case
+                    if (isFull()) {
+                        mode = SpindexerMode.SHOOTING;
+                        moveRightHalf(this.opMode.telemetry); // Enter shooting position 1.5
+                        shootingState = ShootingState.SEARCHING; // Start sorting
+                    }
                 }
             }
         }
 
+    }
+
+    /**
+     * Handles the sorting and shooting sequence.
+     */
+    public void updateAutoShoot() {
+        switch (shootingState) {
+            case SEARCHING:
+                if (ballsShotCount >= 3) {
+                    // Done, exit
+                    moveRightHalf(this.opMode.telemetry); // Exit 1.5 back to intake
+                    mode = SpindexerMode.INTAKING;
+                    ballsShotCount = 0;
+                    clearSlots();
+                    return;
+                }
+
+                // Determine target color
+                SlotColor targetColor = SlotColor.PURPLE;
+                if (pattern == GamePattern.GREEN_FIRST) {
+                    targetColor = (ballsShotCount == 0) ? SlotColor.GREEN : SlotColor.PURPLE;
+                } else if (pattern == GamePattern.GREEN_SECOND) {
+                    targetColor = (ballsShotCount == 1) ? SlotColor.GREEN : SlotColor.PURPLE;
+                } else if (pattern == GamePattern.GREEN_THIRD) {
+                    targetColor = (ballsShotCount == 2) ? SlotColor.GREEN : SlotColor.PURPLE;
+                }
+
+                int relIndex = getNextSlotWithColor(targetColor);
+                if (relIndex == -1) {
+                    // Fallback: search for ANY non-empty
+                    relIndex = getNextSlotWithColor(SlotColor.PURPLE);
+                    if (relIndex == -1)
+                        relIndex = getNextSlotWithColor(SlotColor.GREEN);
+                    if (relIndex == -1) {
+                        // No balls left?
+                        ballsShotCount = 3; // Force exit
+                        return;
+                    }
+                }
+
+                // Move to that slot
+                if (relIndex > 0) {
+                    accum += relIndex * TICKS_PER_SLOT;
+                    int t = (int) Math.rint(zeroCount + accum);
+                    setTarget(t); // Non-blocking set
+
+                    // Verify update of current index logic
+                    // We moved 'relIndex' slots forward.
+                    currentSlotIndex = (currentSlotIndex + relIndex) % slots.length;
+                }
+                shootingState = ShootingState.MOVING;
+                break;
+
+            case MOVING:
+                if (!motor.isBusy()) {
+                    shootingState = ShootingState.READY_TO_SHOOT;
+                }
+                break;
+
+            case READY_TO_SHOOT:
+                // spinUpShooter();
+                if (isShooterReady()) {
+                    feederServo.setPosition(FEEDER_FEEDING);
+                    shootTimer = System.currentTimeMillis();
+                    shootingState = ShootingState.SHOOTING_ACTION;
+                }
+                break;
+
+            case SHOOTING_ACTION:
+                // spinUpShooter(); // Keep spinning
+                if (System.currentTimeMillis() - shootTimer > 500) { // Wait 500ms for feed
+                    feederServo.setPosition(FEEDER_IDLE);
+
+                    // Update state
+                    slots[currentSlotIndex] = SlotColor.EMPTY; // Ball shot
+                    ballsShotCount++;
+                    shootingState = ShootingState.COOLDOWN;
+                    shootTimer = System.currentTimeMillis();
+                }
+                break;
+
+            case COOLDOWN:
+                if (System.currentTimeMillis() - shootTimer > 300) { // Wait 300ms before moving
+                    shootingState = ShootingState.SEARCHING;
+                }
+                break;
+        }
     }
 
     /**
@@ -443,6 +583,6 @@ public class Spindexer {
         telemetry.addLine("=== Sensor State ===");
         telemetry.addData("RED", colors.red);
         telemetry.addData("BLUE", colors.blue);
-        telemetry.addData("Green",colors.green);
+        telemetry.addData("Green", colors.green);
     }
 }
