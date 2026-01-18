@@ -211,7 +211,7 @@ public class Spindexer {
         feederServo.setPosition(FEEDER_IDLE);
         accum -= TICKS_PER_SLOT;
         int target = (int) Math.rint(zeroCount + accum);
-        goTo(target, telemetry);
+        setTarget(target);
     }
 
     /**
@@ -221,7 +221,7 @@ public class Spindexer {
         feederServo.setPosition(FEEDER_IDLE);
         accum += TICKS_PER_SLOT;
         int target = (int) Math.rint(zeroCount + accum);
-        goTo(target, telemetry);
+        setTarget(target);
     }
 
     /**
@@ -231,7 +231,7 @@ public class Spindexer {
         feederServo.setPosition(FEEDER_IDLE);
         accum -= TICKS_PER_SLOT / 2.0;
         int target = (int) Math.rint(zeroCount + accum);
-        goTo(target, telemetry);
+        setTarget(target);
     }
 
     /**
@@ -241,7 +241,7 @@ public class Spindexer {
         feederServo.setPosition(FEEDER_IDLE);
         accum += TICKS_PER_SLOT / 2.0;
         int target = (int) Math.rint(zeroCount + accum);
-        goTo(target, telemetry);
+        setTarget(target);
     }
 
     /**
@@ -365,12 +365,19 @@ public class Spindexer {
             return;
         }
 
+        // Busy check: don't look for new balls while moving to the next slot
+        if (motor.isBusy()) {
+            return;
+        }
+
         SlotColor detectedColor = detectColor();
 
-        // Detect rising edge - color changed from EMPTY/UNKNOWN to a valid color
-        boolean objectDetected = (detectedColor == SlotColor.PURPLE || detectedColor == SlotColor.GREEN);
+        // 1. Determine if *currently* detecting an object
+        boolean objectCurrentlyDetected = (detectedColor == SlotColor.PURPLE || detectedColor == SlotColor.GREEN);
 
-        if (objectDetected) {
+        // 2. Rising edge check: Only act if we see an object NOW, but didn't see one
+        // BEFORE
+        if (objectCurrentlyDetected && !lastColorDetected) {
             // Store color in current slot and advance to next slot
             if (currentSlotIndex < slots.length) {
                 slots[currentSlotIndex] = detectedColor;
@@ -388,6 +395,8 @@ public class Spindexer {
             }
         }
 
+        // 3. Update state for next loop to enable edge detection
+        lastColorDetected = objectCurrentlyDetected;
     }
 
     /**
