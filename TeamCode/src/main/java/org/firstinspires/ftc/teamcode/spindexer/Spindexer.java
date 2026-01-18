@@ -287,11 +287,11 @@ public class Spindexer {
     private SlotColor detectColor() {
         NormalizedRGBA colors = intakeSensor.getNormalizedColors();
         // TODO: Tune these color thresholds based on your sensor and lighting
-        if (colors.red < 50 && colors.green < 50 && colors.blue < 50) {
-            return SlotColor.EMPTY;
-        } else if (colors.green > colors.red && colors.green > colors.blue) {
+        if (colors.green > colors.red && colors.green > colors.blue) {
             return SlotColor.GREEN;
         } else if (colors.red > colors.green && colors.blue > colors.green) {
+            return SlotColor.EMPTY;
+        } else if(colors.red < 0.005 && colors.green < 0.005 && colors.blue < 0.005) {
             return SlotColor.EMPTY;
         }
         return SlotColor.UNKNOWN;
