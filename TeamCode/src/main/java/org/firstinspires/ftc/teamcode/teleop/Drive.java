@@ -65,6 +65,7 @@ public class Drive extends LinearOpMode {
 
         // Intake Motor
         intake = hardwareMap.get(DcMotor.class, INTAKE_MOTOR);
+        intakeSensor.setGain(2);
 
         // Limelight
         limelight = new LimelightControl(hardwareMap, telemetry);

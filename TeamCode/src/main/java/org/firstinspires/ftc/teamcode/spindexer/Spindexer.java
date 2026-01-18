@@ -289,12 +289,11 @@ public class Spindexer {
         // TODO: Tune these color thresholds based on your sensor and lighting
         if (colors.green > colors.red && colors.green > colors.blue) {
             return SlotColor.GREEN;
-        } else if (colors.red > colors.green && colors.blue > colors.green) {
+        } else if (colors.blue > colors.green) { //colors.red > colors.green &&
             return SlotColor.EMPTY;
-        } else if(colors.red < 0.005 && colors.green < 0.005 && colors.blue < 0.005) {
+        } else {
             return SlotColor.EMPTY;
         }
-        return SlotColor.UNKNOWN;
     }
 
     /**
@@ -308,7 +307,7 @@ public class Spindexer {
         // Detect rising edge - color changed from EMPTY/UNKNOWN to a valid color
         boolean objectDetected = (detectedColor == SlotColor.PURPLE || detectedColor == SlotColor.GREEN);
 
-        if (objectDetected && !lastColorDetected) {
+        if (objectDetected ) {
             // Store color in current slot and advance to next slot
             if (currentSlotIndex < slots.length) {
                 slots[currentSlotIndex] = detectedColor;
@@ -317,7 +316,6 @@ public class Spindexer {
             }
         }
 
-        lastColorDetected = objectDetected;
     }
 
     /**
