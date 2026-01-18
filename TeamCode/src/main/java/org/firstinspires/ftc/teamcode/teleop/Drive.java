@@ -199,6 +199,8 @@ public class Drive extends LinearOpMode {
             // Add shooter telemetry
             spindexer.addShooterTelemetry(telemetry);
 
+            spindexer.addSlotTelemetry(telemetry);
+
             telemetry.addLine("\n--- Controls ---");
             telemetry.addLine("A: Run Intake");
             telemetry.addLine("DPad Left/Right: Move Spindexer");
