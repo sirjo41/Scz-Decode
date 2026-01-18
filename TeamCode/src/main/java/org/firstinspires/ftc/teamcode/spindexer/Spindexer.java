@@ -387,6 +387,12 @@ public class Spindexer {
                 if (isFull()) {
                     mode = SpindexerMode.SHOOTING;
                     moveRightHalf(this.opMode.telemetry); // Enter shooting position 1.5
+
+                    // Physical Correction: When we stop at intake (Slot 2) and move +0.5,
+                    // Slot 1 ends up at the shooter (180 deg away).
+                    // So we must shift our index reference by +1 to match physical reality.
+                    currentSlotIndex = (currentSlotIndex + 1) % slots.length;
+
                     shootingState = ShootingState.SEARCHING; // Start sorting
                 } else {
                     // Not full yet, just move to next slot
@@ -439,12 +445,20 @@ public class Spindexer {
 
                 // Move to that slot
                 if (relIndex > 0) {
-                    accum += relIndex * TICKS_PER_SLOT;
+                    // Shortest path optimization:
+                    // If target is 2 slots away (forward), it's faster to go 1 slot backward.
+                    // relIndex is always 0, 1, or 2.
+                    int moveSteps = relIndex;
+                    if (moveSteps > 1) {
+                        moveSteps = -1; // Move backward 1 slot instead of forward 2
+                    }
+
+                    accum += moveSteps * TICKS_PER_SLOT;
                     int t = (int) Math.rint(zeroCount + accum);
                     setTarget(t); // Non-blocking set
 
                     // Verify update of current index logic
-                    // We moved 'relIndex' slots forward.
+                    // We moved 'relIndex' slots forward (logically).
                     currentSlotIndex = (currentSlotIndex + relIndex) % slots.length;
                 }
                 shootingState = ShootingState.MOVING;
