@@ -432,4 +432,12 @@ public class Spindexer {
         telemetry.addData("Shooter Ready", isShooterReady() ? "YES" : "NO");
         telemetry.addData("Feeder Position", String.format("%.2f", feederServo.getPosition()));
     }
+
+    public void addSensorTelemetry(Telemetry telemetry) {
+        NormalizedRGBA colors = intakeSensor.getNormalizedColors();
+        telemetry.addLine("=== Sensor State ===");
+        telemetry.addData("RED", colors.red);
+        telemetry.addData("BLUE", colors.blue);
+        telemetry.addData("Green",colors.green);
+    }
 }

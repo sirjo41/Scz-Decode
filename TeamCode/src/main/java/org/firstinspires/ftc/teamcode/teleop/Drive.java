@@ -23,7 +23,7 @@ public class Drive extends LinearOpMode {
 
     // Spindexer & Intake Hardware
     private static final String SPINDEXER_MOTOR = "spindexer";
-    private static final String COLOR_SENSOR = "shooterColor";
+    private static final String COLOR_SENSOR = "intakeColor";
     private static final String INTAKE_MOTOR = "intake";
     private static final String FEEDER_SERVO = "feeder";
     private static final String SHOOTER_MOTOR = "shooter";
