@@ -572,7 +572,7 @@ public class Spindexer {
      */
     public boolean isShooterReady() {
         double currentVelocity = getShooterRPM();
-        return Math.abs(currentVelocity - TARGET_SHOOTER_RPM) < SHOOTER_VELOCITY_TOLERANCE;
+        return (currentVelocity > TARGET_SHOOTER_RPM);//Math.abs(currentVelocity - TARGET_SHOOTER_RPM) < SHOOTER_VELOCITY_TOLERANCE;
     }
 
     /**
