@@ -544,7 +544,7 @@ public class Spindexer {
      * Spins up the shooter motor to target velocity.
      */
     public void spinUpShooter() {
-        double targetTicksPerSecond = (TARGET_SHOOTER_RPM * CPR_MOTOR) / 60.0;
+        double targetTicksPerSecond =100;
         shooterMotor.setVelocity(targetTicksPerSecond);
     }
 
