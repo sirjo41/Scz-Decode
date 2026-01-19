@@ -38,7 +38,7 @@ public class Spindexer {
 
     // Shooter constants
     public static final double TARGET_SHOOTER_RPM = 1800; // TODO: Tune target shooter velocity
-    private static final double SHOOTER_VELOCITY_TOLERANCE = 15; // RPM tolerance for "ready" state
+    private static final double SHOOTER_VELOCITY_TOLERANCE = 200; // RPM tolerance for "ready" state
 
     // Shooter PID coefficients
     // Shooter PID coefficients
