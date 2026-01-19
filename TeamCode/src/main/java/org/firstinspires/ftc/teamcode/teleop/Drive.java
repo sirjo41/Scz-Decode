@@ -57,7 +57,7 @@ public class Drive extends LinearOpMode {
 
         // Spindexer System
         DcMotorEx spinMotor = hardwareMap.get(DcMotorEx.class, SPINDEXER_MOTOR);
-        NormalizedColorSensor intakeSensor = hardwareMap.get(NormalizedColorSensor .class, COLOR_SENSOR);
+        NormalizedColorSensor intakeSensor = hardwareMap.get(NormalizedColorSensor.class, COLOR_SENSOR);
         Servo feederServo = hardwareMap.get(Servo.class, FEEDER_SERVO);
         DcMotorEx shooterMotor = hardwareMap.get(DcMotorEx.class, SHOOTER_MOTOR);
         shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -170,17 +170,21 @@ public class Drive extends LinearOpMode {
                 // Don't actively stop to maintain momentum
             }
 
-            if(gamepad1.y){
+            if (gamepad1.y) {
                 spindexer.shoot();
             }
             // Right Bumper: Shoot (feed ball when ready)
-            if (rightBumperEdge) {
+            else if (rightBumperEdge) {
                 boolean fed = spindexer.shoot();
                 if (!fed) {
                     // Could add haptic feedback or telemetry warning
                 }
-            } else if (!gamepad1.right_bumper) {
-                // Retract feeder when button released
+            } else if (gamepad1.right_bumper) {
+                // Keep feeding while held if needed, or rely on edge?
+                // Standardize: If Y OR Bumper is held, try to shoot.
+                spindexer.shoot();
+            } else {
+                // Retract feeder when neither is pressed
                 spindexer.retractFeeder();
             }
 
