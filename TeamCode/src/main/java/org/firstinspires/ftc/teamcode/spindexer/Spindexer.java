@@ -470,7 +470,7 @@ public class Spindexer {
                 break;
 
             case READY_TO_SHOOT:
-                // spinUpShooter();
+                spinUpShooter();
                 if (isShooterReady()) {
                     feederServo.setPosition(FEEDER_FEEDING);
                     shootTimer = System.currentTimeMillis();
@@ -479,7 +479,7 @@ public class Spindexer {
                 break;
 
             case SHOOTING_ACTION:
-                // spinUpShooter(); // Keep spinning
+                spinUpShooter(); // Keep spinning
                 if (System.currentTimeMillis() - shootTimer > 500) { // Wait 500ms for feed
                     feederServo.setPosition(FEEDER_IDLE);
 
