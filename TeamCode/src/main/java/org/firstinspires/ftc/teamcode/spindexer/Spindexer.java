@@ -474,22 +474,21 @@ public class Spindexer {
                 if (isShooterReady()) {
                     feederServo.setPosition(FEEDER_FEEDING);
                     shootTimer = System.currentTimeMillis();
-                    shootingState = ShootingState.SHOOTING_ACTION;
+                    if (System.currentTimeMillis() - shootTimer > 3000) { // Wait 500ms for feed
+                        feederServo.setPosition(FEEDER_IDLE);
+                        shootingState = ShootingState.SHOOTING_ACTION;
+                    }
+
                 }
                 break;
 
             case SHOOTING_ACTION:
-                spinUpShooter(); // Keep spinning
-                if (System.currentTimeMillis() - shootTimer > 3000) { // Wait 500ms for feed
-                    feederServo.setPosition(FEEDER_IDLE);
-
                     // Update state
-                    slots[currentSlotIndex] = SlotColor.EMPTY; // Ball shot
-                    ballsShotCount++;
-                    shootingState = ShootingState.COOLDOWN;
-                    shootTimer = System.currentTimeMillis();
-                }
-                break;
+                slots[currentSlotIndex] = SlotColor.EMPTY; // Ball shot
+                ballsShotCount++;
+                shootingState = ShootingState.COOLDOWN;
+                shootTimer = System.currentTimeMillis();
+
 
             case COOLDOWN:
                 if (System.currentTimeMillis() - shootTimer > 300) { // Wait 300ms before moving
