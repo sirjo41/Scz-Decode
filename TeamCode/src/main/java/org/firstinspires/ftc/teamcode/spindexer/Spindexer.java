@@ -413,6 +413,7 @@ public class Spindexer {
             case SEARCHING:
                 if (ballsShotCount >= 3) {
                     // Done, exit
+                    stopShooter();
                     moveRightHalf(this.opMode.telemetry); // Exit 1.5 back to intake
                     mode = SpindexerMode.INTAKING;
                     ballsShotCount = 0;
