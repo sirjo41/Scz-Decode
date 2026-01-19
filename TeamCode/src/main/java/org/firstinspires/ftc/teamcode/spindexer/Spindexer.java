@@ -41,10 +41,11 @@ public class Spindexer {
     private static final double SHOOTER_VELOCITY_TOLERANCE = 15; // RPM tolerance for "ready" state
 
     // Shooter PID coefficients
-    public static final double SHOOTER_P = 0.5; // TODO: Tune shooter P coefficient
-    public static final double SHOOTER_I = 0.0; // TODO: Tune shooter I coefficient
-    public static final double SHOOTER_D = 0.15; // TODO: Tune shooter D coefficient
-    public static final double SHOOTER_F = 0.5; // TODO: Tune shooter F coefficient
+    // Shooter PID coefficients
+    public static final double SHOOTER_P = 1.2; // Tune: Start with 10% of F
+    public static final double SHOOTER_I = 0.0;
+    public static final double SHOOTER_D = 0.0;
+    public static final double SHOOTER_F = 12.0; // Tune: 32767 / MaxTicksPerSec (approx 2700 for 6000RPM motor)
 
     // Servo positions
     private static final double FEEDER_IDLE = 1.0;
@@ -544,7 +545,9 @@ public class Spindexer {
      * Spins up the shooter motor to target velocity.
      */
     public void spinUpShooter() {
-        double targetTicksPerSecond =100;
+        // Convert RPM to Ticks Per Second
+        // Velocity = (RPM / 60) * CPR
+        double targetTicksPerSecond = (TARGET_SHOOTER_RPM / 60.0) * CPR_MOTOR;
         shooterMotor.setVelocity(targetTicksPerSecond);
     }
 
@@ -561,9 +564,8 @@ public class Spindexer {
      */
     public double getShooterRPM() {
         double ticksPerSecond = shooterMotor.getVelocity();
-        // Assuming 28 CPR motor (e.g., REV HD Hex Motor)
-        // Adjust CPR_MOTOR constant if using different motor
-        return ticksPerSecond;
+        // RPM = (TicksPerSec / CPR) * 60
+        return (ticksPerSecond / CPR_MOTOR) * 60.0;
     }
 
     /**
