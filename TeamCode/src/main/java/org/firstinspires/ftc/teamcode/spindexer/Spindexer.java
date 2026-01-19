@@ -42,7 +42,7 @@ public class Spindexer {
 
     // Shooter PID coefficients
     // Shooter PID coefficients
-    public static final double SHOOTER_P = 1.2; // Tune: Start with 10% of F
+    public static final double SHOOTER_P = 2; // Tune: Start with 10% of F
     public static final double SHOOTER_I = 0.0;
     public static final double SHOOTER_D = 0.0;
     public static final double SHOOTER_F = 12.0; // Tune: 32767 / MaxTicksPerSec (approx 2700 for 6000RPM motor)
