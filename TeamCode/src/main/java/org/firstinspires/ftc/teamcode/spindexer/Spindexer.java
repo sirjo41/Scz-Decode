@@ -37,7 +37,7 @@ public class Spindexer {
     private static final double MAX_POWER = 1; // TODO: Tune max motor power
 
     // Shooter constants
-    public static final double TARGET_SHOOTER_RPM = 1800; // TODO: Tune target shooter velocity
+    public static final double TARGET_SHOOTER_RPM = 5000; // TODO: Tune target shooter velocity
     private static final double SHOOTER_VELOCITY_TOLERANCE = 200; // RPM tolerance for "ready" state
 
     // Shooter PID coefficients
