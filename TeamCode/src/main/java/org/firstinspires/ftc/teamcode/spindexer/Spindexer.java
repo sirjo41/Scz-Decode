@@ -480,7 +480,7 @@ public class Spindexer {
 
             case SHOOTING_ACTION:
                 spinUpShooter(); // Keep spinning
-                if (System.currentTimeMillis() - shootTimer > 500) { // Wait 500ms for feed
+                if (System.currentTimeMillis() - shootTimer > 1000) { // Wait 500ms for feed
                     feederServo.setPosition(FEEDER_IDLE);
 
                     // Update state
