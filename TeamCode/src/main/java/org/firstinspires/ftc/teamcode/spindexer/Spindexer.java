@@ -563,7 +563,7 @@ public class Spindexer {
         double ticksPerSecond = shooterMotor.getVelocity();
         // Assuming 28 CPR motor (e.g., REV HD Hex Motor)
         // Adjust CPR_MOTOR constant if using different motor
-        return (ticksPerSecond / CPR_MOTOR) * 60.0;
+        return ticksPerSecond;
     }
 
     /**
