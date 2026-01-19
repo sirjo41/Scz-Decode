@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.spindexer;
 
-import com.arcrobotics.ftclib.controller.PIDFController;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -42,10 +41,10 @@ public class Spindexer {
     private static final double SHOOTER_VELOCITY_TOLERANCE = 15; // RPM tolerance for "ready" state
 
     // Shooter PID coefficients
-    public static final double SHOOTER_P = 1; // TODO: Tune shooter P coefficient
+    public static final double SHOOTER_P = 0.5; // TODO: Tune shooter P coefficient
     public static final double SHOOTER_I = 0.0; // TODO: Tune shooter I coefficient
     public static final double SHOOTER_D = 0.15; // TODO: Tune shooter D coefficient
-    public static final double SHOOTER_F = 0.0; // TODO: Tune shooter F coefficient
+    public static final double SHOOTER_F = 0.5; // TODO: Tune shooter F coefficient
 
     // Servo positions
     private static final double FEEDER_IDLE = 1.0;
@@ -84,7 +83,6 @@ public class Spindexer {
     private final LinearOpMode opMode;
     private final Servo feederServo;
     private final DcMotorEx shooterMotor;
-    private final com.arcrobotics.ftclib.controller.PIDFController shooterPID;
 
     // State tracking
     private int zeroCount = 0;
@@ -195,13 +193,13 @@ public class Spindexer {
         feederServo.setPosition(FEEDER_IDLE);
 
         // Initialize shooter motor
-        shooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        shooterMotor.setPower(0);
 
-        // Initialize PID controller for shooter velocity
-        shooterPID = new PIDFController(SHOOTER_P, SHOOTER_I, SHOOTER_D, SHOOTER_F);
-        shooterPID.setTolerance(SHOOTER_VELOCITY_TOLERANCE);
+        // Apply PIDF coefficients for velocity control
+        // Note: F (Feedforward) is critical for velocity! F = 32767 / MaxTicksPerSec
+        PIDFCoefficients currentShooterPIDF = new PIDFCoefficients(SHOOTER_P, SHOOTER_I, SHOOTER_D, SHOOTER_F);
+        shooterMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, currentShooterPIDF);
     }
 
     /**
@@ -546,21 +544,15 @@ public class Spindexer {
      * Spins up the shooter motor to target velocity.
      */
     public void spinUpShooter() {
-        double targetVelocity = TARGET_SHOOTER_RPM;
-        double currentVelocity = getShooterRPM();
-
-        double power = shooterPID.calculate(currentVelocity, targetVelocity);
-        // Add feedforward term
-        power += SHOOTER_F * targetVelocity;
-
-        shooterMotor.setPower(Math.max(0, Math.min(1, power)));
+        double targetTicksPerSecond = (TARGET_SHOOTER_RPM * CPR_MOTOR) / 60.0;
+        shooterMotor.setVelocity(targetTicksPerSecond);
     }
 
     /**
      * Stops the shooter motor.
      */
     public void stopShooter() {
-        shooterMotor.setPower(0);
+        shooterMotor.setVelocity(0);
         feederServo.setPosition(FEEDER_IDLE);
     }
 
