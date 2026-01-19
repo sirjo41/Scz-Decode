@@ -183,10 +183,11 @@ public class Drive extends LinearOpMode {
                 // Keep feeding while held if needed, or rely on edge?
                 // Standardize: If Y OR Bumper is held, try to shoot.
                 spindexer.shoot();
-            } else {
-                // Retract feeder when neither is pressed
-                spindexer.retractFeeder();
             }
+            // } else {
+            //     // Retract feeder when neither is pressed
+            //     spindexer.retractFeeder();
+            // }
 
             // B Button: Kill switch - emergency stop shooter
             if (gamepad1.b) {
