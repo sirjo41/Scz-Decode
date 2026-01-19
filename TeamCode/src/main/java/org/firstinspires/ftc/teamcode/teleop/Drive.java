@@ -170,6 +170,9 @@ public class Drive extends LinearOpMode {
                 // Don't actively stop to maintain momentum
             }
 
+            if(gamepad1.y){
+                spindexer.shoot();
+            }
             // Right Bumper: Shoot (feed ball when ready)
             if (rightBumperEdge) {
                 boolean fed = spindexer.shoot();
