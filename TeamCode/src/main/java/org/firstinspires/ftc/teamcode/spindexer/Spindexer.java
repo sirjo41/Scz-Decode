@@ -37,7 +37,8 @@ public class Spindexer {
     private static final double MAX_POWER = 1; // TODO: Tune max motor power
 
     // Shooter constants
-    public static final double TARGET_SHOOTER_RPM = 3500; // TODO: Tune target shooter velocity
+    public static final double TARGET_SHOOTER_RPM = 3500; // Default
+    private double currentTargetRPM = TARGET_SHOOTER_RPM;
     private static final double SHOOTER_VELOCITY_TOLERANCE = 200; // RPM tolerance for "ready" state
 
     // Shooter PID coefficients
@@ -75,7 +76,8 @@ public class Spindexer {
      */
     public enum SpindexerMode {
         INTAKING,
-        SHOOTING
+        SHOOTING, // Sorted
+        RAPID_FIRE // Unsorted
     }
 
     // Hardware components
@@ -113,6 +115,7 @@ public class Spindexer {
 
     private ShootingState shootingState = ShootingState.SEARCHING;
     private long shootTimer = 0;
+    private boolean autoRetract = true; // Default to true for auto-spindexer logic
 
     private int ballsShotCount = 0;
 
@@ -255,10 +258,15 @@ public class Spindexer {
      * Sets the spindexer mode.
      */
     public void setMode(SpindexerMode mode) {
+        setMode(mode, true); // Default to auto-retract
+    }
+
+    public void setMode(SpindexerMode mode, boolean autoRetract) {
         this.mode = mode;
-        if (mode == SpindexerMode.SHOOTING) {
+        this.autoRetract = autoRetract;
+        if (mode == SpindexerMode.SHOOTING || mode == SpindexerMode.RAPID_FIRE) {
             shootingState = ShootingState.SEARCHING;
-            ballsShotCount = 0; // Reset count on manual entry? Maybe.
+            ballsShotCount = 0;
         }
     }
 
@@ -363,6 +371,9 @@ public class Spindexer {
         if (mode == SpindexerMode.SHOOTING) {
             updateAutoShoot();
             return;
+        } else if (mode == SpindexerMode.RAPID_FIRE) {
+            updateRapidFire();
+            return;
         }
 
         // Busy check: don't look for new balls while moving to the next slot
@@ -385,7 +396,7 @@ public class Spindexer {
 
                 // Prioritize checking if full to switch mode
                 if (isFull()) {
-                    mode = SpindexerMode.SHOOTING;
+                    setMode(SpindexerMode.SHOOTING, true); // Auto-mode should retract when done
                     moveRightHalf(this.opMode.telemetry); // Enter shooting position 1.5
 
                     // Physical Correction: When we stop at intake (Slot 2) and move +0.5,
@@ -406,19 +417,111 @@ public class Spindexer {
     }
 
     /**
+     * Handles rapid fire (no sorting).
+     */
+    public void updateRapidFire() {
+        switch (shootingState) {
+            case SEARCHING:
+                if (ballsShotCount >= 3) {
+                    if (autoRetract) {
+                        stopShooter();
+                        moveRightHalf(this.opMode.telemetry);
+                        mode = SpindexerMode.INTAKING;
+                        ballsShotCount = 0;
+                        clearSlots();
+                        return;
+                    } else {
+                        // Manual mode: Keep searching or reset count?
+                        // Ideally reset count so we can shoot more if they appear?
+                        ballsShotCount = 0;
+                    }
+                }
+
+                // Find ANY ball
+                int relIndex = getNextSlotWithColor(SlotColor.PURPLE);
+                if (relIndex == -1)
+                    relIndex = getNextSlotWithColor(SlotColor.GREEN);
+
+                if (relIndex == -1) {
+                    if (autoRetract) {
+                        ballsShotCount = 3;
+                        return;
+                    } else {
+                        // Stay in SEARCHING, don't exit
+                        return;
+                    }
+                }
+
+                // Move logic (Same as AutoShoot)
+                if (relIndex > 0) {
+                    int moveSteps = relIndex;
+                    if (moveSteps > 1) {
+                        moveSteps = -1;
+                    }
+                    accum += moveSteps * TICKS_PER_SLOT;
+                    int t = (int) Math.rint(zeroCount + accum);
+                    setTarget(t);
+                    currentSlotIndex = (currentSlotIndex + relIndex) % slots.length;
+                }
+                shootingState = ShootingState.MOVING;
+                break;
+
+            case MOVING:
+                if (!motor.isBusy()) {
+                    shootingState = ShootingState.READY_TO_SHOOT;
+                }
+                break;
+
+            case READY_TO_SHOOT:
+                spinUpShooter();
+                if (isShooterReady()) {
+                    feederServo.setPosition(FEEDER_FEEDING);
+                    shootTimer = System.currentTimeMillis();
+                    shootingState = ShootingState.FEEDING;
+                }
+                break;
+
+            case FEEDING:
+                spinUpShooter();
+                if (System.currentTimeMillis() - shootTimer > 500) {
+                    feederServo.setPosition(FEEDER_IDLE);
+                    shootingState = ShootingState.SHOOTING_ACTION;
+                }
+                break;
+
+            case SHOOTING_ACTION:
+                slots[currentSlotIndex] = SlotColor.EMPTY;
+                ballsShotCount++;
+                shootingState = ShootingState.COOLDOWN;
+                shootTimer = System.currentTimeMillis();
+                // Intentional fall-through
+
+            case COOLDOWN:
+                if (System.currentTimeMillis() - shootTimer > 100) { // Faster cooldown for rapid?
+                    shootingState = ShootingState.SEARCHING;
+                }
+                break;
+        }
+    }
+
+    /**
      * Handles the sorting and shooting sequence.
      */
     public void updateAutoShoot() {
         switch (shootingState) {
             case SEARCHING:
                 if (ballsShotCount >= 3) {
-                    // Done, exit
-                    stopShooter();
-                    moveRightHalf(this.opMode.telemetry); // Exit 1.5 back to intake
-                    mode = SpindexerMode.INTAKING;
-                    ballsShotCount = 0;
-                    clearSlots();
-                    return;
+                    if (autoRetract) {
+                        // Done, exit
+                        stopShooter();
+                        moveRightHalf(this.opMode.telemetry); // Exit 1.5 back to intake
+                        mode = SpindexerMode.INTAKING;
+                        ballsShotCount = 0;
+                        clearSlots();
+                        return;
+                    } else {
+                        ballsShotCount = 0; // Reset for manual
+                    }
                 }
 
                 // Determine target color
@@ -438,9 +541,12 @@ public class Spindexer {
                     if (relIndex == -1)
                         relIndex = getNextSlotWithColor(SlotColor.GREEN);
                     if (relIndex == -1) {
-                        // No balls left?
-                        ballsShotCount = 3; // Force exit
-                        return;
+                        if (autoRetract) {
+                            ballsShotCount = 3; // Force exit
+                            return;
+                        } else {
+                            return; // Stay searching
+                        }
                     }
                 }
 
@@ -551,8 +657,12 @@ public class Spindexer {
     public void spinUpShooter() {
         // Convert RPM to Ticks Per Second
         // Velocity = (RPM / 60) * CPR
-        double targetTicksPerSecond = (TARGET_SHOOTER_RPM / 60.0) * CPR_MOTOR;
+        double targetTicksPerSecond = (currentTargetRPM / 60.0) * CPR_MOTOR;
         shooterMotor.setVelocity(targetTicksPerSecond);
+    }
+
+    public void setTargetShooterRPM(double rpm) {
+        this.currentTargetRPM = rpm;
     }
 
     /**
@@ -577,7 +687,7 @@ public class Spindexer {
      */
     public boolean isShooterReady() {
         double currentVelocity = getShooterRPM();
-        return (Math.abs(currentVelocity) >= TARGET_SHOOTER_RPM);
+        return (Math.abs(currentVelocity) >= currentTargetRPM);
     }
 
     /**
