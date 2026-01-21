@@ -2,14 +2,11 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
-
-import org.firstinspires.ftc.teamcode.limelight.LimelightControl;
 import org.firstinspires.ftc.teamcode.spindexer.Spindexer;
 
 @TeleOp(name = "Drive", group = "TeleOp")
@@ -28,21 +25,12 @@ public class Drive extends LinearOpMode {
     private static final String FEEDER_SERVO = "feeder";
     private static final String SHOOTER_MOTOR = "shooter";
 
-    // Subsystems
-    private Spindexer spindexer;
-    private LimelightControl limelight;
-    private DcMotor intake;
-
     // Edge Detection
-    private boolean lastX = false;
-    private boolean lastY = false;
-    private boolean lastB = false;
     private boolean lastDpUp = false;
     private boolean lastDpDown = false;
-    private boolean lastRightBumper = false;
 
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void runOpMode() {
 
         // --- Hardware Initialization ---
 
@@ -61,14 +49,12 @@ public class Drive extends LinearOpMode {
         Servo feederServo = hardwareMap.get(Servo.class, FEEDER_SERVO);
         DcMotorEx shooterMotor = hardwareMap.get(DcMotorEx.class, SHOOTER_MOTOR);
         shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        spindexer = new Spindexer(this, spinMotor, intakeSensor, feederServo, shooterMotor);
+        // Subsystems
+        Spindexer spindexer = new Spindexer(this, spinMotor, intakeSensor, feederServo, shooterMotor);
 
         // Intake Motor
-        intake = hardwareMap.get(DcMotor.class, INTAKE_MOTOR);
+        DcMotor intake = hardwareMap.get(DcMotor.class, INTAKE_MOTOR);
         intakeSensor.setGain(2);
-
-        // Limelight
-        limelight = new LimelightControl(hardwareMap, telemetry);
 
         telemetry.addLine("Initialized! Ready to Start.");
         telemetry.update();
@@ -97,13 +83,9 @@ public class Drive extends LinearOpMode {
             // === 2. Spindexer Control (Gamepad 1) ===
 
             // Edge Detection
-            boolean leftEdge = gamepad1.dpad_left && !lastX;
-            boolean rightEdge = gamepad1.dpad_right && !lastY;
             boolean dpUpEdge = gamepad1.dpad_up && !lastDpUp; // Cycle Pattern
             boolean dpDownEdge = gamepad1.dpad_down && !lastDpDown; // Switch Mode
 
-            lastX = gamepad1.dpad_left;
-            lastY = gamepad1.dpad_right;
             lastDpUp = gamepad1.dpad_up;
             lastDpDown = gamepad1.dpad_down;
 
@@ -126,27 +108,21 @@ public class Drive extends LinearOpMode {
             if (dpDownEdge) {
                 if (spindexer.getMode() == Spindexer.SpindexerMode.INTAKING) {
                     spindexer.setMode(Spindexer.SpindexerMode.SHOOTING);
-                    spindexer.moveRightHalf(telemetry); // Move half-slot when switching to shooting
+                    spindexer.moveRightHalf(); // Move half-slot when switching to shooting
                 } else {
                     spindexer.setMode(Spindexer.SpindexerMode.INTAKING);
-                    spindexer.moveRightHalf(telemetry); // Move half-slot when switching to intaking
+                    spindexer.moveRightHalf(); // Move half-slot when switching to intaking
                 }
             }
 
             // DPad Left: Move spindexer left (full-slot always)
-            if (leftEdge) {
-                spindexer.moveLeft(telemetry);
+            if (gamepad1.dpad_left) {
+                spindexer.moveLeft();
             }
 
             // DPad Right: Move spindexer right (full-slot always)
-            if (rightEdge) {
-                spindexer.moveRight(telemetry);
-            }
-
-            // Update Pattern from Limelight (Auto-Detect)
-            Spindexer.GamePattern detected = limelight.getGamePatternFromTags();
-            if (detected != null) {
-                spindexer.setGamePattern(detected);
+            if (gamepad1.dpad_right) {
+                spindexer.moveRight();
             }
 
             // DPad Up: Manual Pattern Cycle Override
@@ -158,9 +134,6 @@ public class Drive extends LinearOpMode {
             }
 
             // === 3. Shooter Control (Gamepad 1) ===
-
-            boolean rightBumperEdge = gamepad1.right_bumper && !lastRightBumper;
-            lastRightBumper = gamepad1.right_bumper;
 
             // Right Trigger: Spin up shooter
             if (gamepad1.right_trigger > 0.1) {
@@ -182,7 +155,6 @@ public class Drive extends LinearOpMode {
             telemetry.addLine("--- Spindexer State ---");
             telemetry.addData("Mode", spindexer.getMode());
             telemetry.addData("Pattern", spindexer.getGamePattern());
-            telemetry.addData("Detected Tag Pattern", detected);
             telemetry.addData("Encoder", spindexer.getEncoder());
             telemetry.addData("Target", spindexer.getTarget());
 
@@ -206,7 +178,5 @@ public class Drive extends LinearOpMode {
 
             telemetry.update();
         }
-
-        limelight.stop();
     }
 }

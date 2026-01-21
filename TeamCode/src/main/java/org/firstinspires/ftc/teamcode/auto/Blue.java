@@ -17,8 +17,8 @@ import org.firstinspires.ftc.teamcode.limelight.LimelightControl;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.spindexer.Spindexer;
 
-@Autonomous(name = "Red", group = "Red",preselectTeleOp = "Drive")
-public class Red extends OpMode {
+@Autonomous(name = "Blue", group = "Blue",preselectTeleOp = "Drive")
+public class Blue extends OpMode {
 
     private Follower follower;
     private Timer pathTimer, opmodeTimer;
@@ -145,7 +145,7 @@ public class Red extends OpMode {
                 break;
 
             case 4: // Moving to Feed 1
-                    // We keep intake running
+                // We keep intake running
                 if (!follower.isBusy()) {
                     /* At Feed 1 */
                     // Prepare to go back to shoot

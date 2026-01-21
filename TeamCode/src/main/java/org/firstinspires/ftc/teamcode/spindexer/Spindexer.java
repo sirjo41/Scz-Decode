@@ -1,8 +1,11 @@
 package org.firstinspires.ftc.teamcode.spindexer;
 
+import android.annotation.SuppressLint;
+
+import androidx.annotation.NonNull;
+
 import com.bylazar.configurables.annotations.Configurable;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
@@ -10,6 +13,8 @@ import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+
+import java.util.Arrays;
 
 /**
  * Spindexer - Simplified rotary indexer for left/right movement.
@@ -19,8 +24,6 @@ public class Spindexer {
 
     // Motor and encoder constants
     private static final double CPR_MOTOR = 28; // TODO: Verify motor encoder CPR
-    private static final double GEAR_RATIO = 1.0; // TODO: Tune based on actual gear ratio
-    private static final double CPR_PLATE = CPR_MOTOR / GEAR_RATIO;
 
     // Rotation constants
     public static final double TICKS_PER_SLOT = 473;// TODO: Tune number of slots (currently 3)
@@ -28,13 +31,13 @@ public class Spindexer {
     // PID coefficients for position control
     public static final PIDFCoefficients POS_PIDF = new PIDFCoefficients(
             12, // TODO: Tune P coefficient
-            0, // TODO: Tune I coefficient
-            0.15, // TODO: Tune D coefficient
-            0.0); // TODO: Tune F coefficient
+            0,
+            0.15,
+            0.0);
 
     // Motor control parameters
-    private static final int TARGET_TOL = 1; // TODO: Tune position tolerance
-    private static final double MAX_POWER = 1; // TODO: Tune max motor power
+    private static final int TARGET_TOL = 1;
+    private static final double MAX_POWER = 1;
 
     // Shooter constants
     public static final double TARGET_SHOOTER_RPM = 3500; // TODO: Tune target shooter velocity
@@ -67,7 +70,6 @@ public class Spindexer {
         EMPTY,
         PURPLE,
         GREEN,
-        UNKNOWN
     }
 
     /**
@@ -75,14 +77,12 @@ public class Spindexer {
      */
     public enum SpindexerMode {
         INTAKING,
-        READYTOSHOOT,
         SHOOTING
     }
 
     // Hardware components
     private final DcMotorEx motor;
     private final NormalizedColorSensor intakeSensor;
-    private final LinearOpMode opMode;
     private final Servo feederServo;
     private final DcMotorEx shooterMotor;
 
@@ -163,9 +163,8 @@ public class Spindexer {
     /**
      * Constructor - Initializes the spindexer with motor and intake system.
      */
-    public Spindexer(LinearOpMode opMode, DcMotorEx motor,
-            NormalizedColorSensor intakeSensor, Servo feederServo, DcMotorEx shooterMotor) {
-        this.opMode = opMode;
+    public Spindexer(OpMode opMode, DcMotorEx motor,
+                     NormalizedColorSensor intakeSensor, Servo feederServo, DcMotorEx shooterMotor) {
         this.motor = motor;
         this.intakeSensor = intakeSensor;
         this.feederServo = feederServo;
@@ -192,9 +191,7 @@ public class Spindexer {
         motor.setPower(MAX_POWER);
 
         // Initialize all slots as empty
-        for (int i = 0; i < slots.length; i++) {
-            slots[i] = SlotColor.EMPTY;
-        }
+        Arrays.fill(slots, SlotColor.EMPTY);
 
         // Initialize feeder servo to idle position
         feederServo.setPosition(FEEDER_IDLE);
@@ -212,7 +209,7 @@ public class Spindexer {
     /**
      * Move left (counter-clockwise) by one slot.
      */
-    public void moveLeft(Telemetry telemetry) {
+    public void moveLeft() {
         feederServo.setPosition(FEEDER_IDLE);
         accum -= TICKS_PER_SLOT;
         int target = (int) Math.rint(zeroCount + accum);
@@ -223,7 +220,7 @@ public class Spindexer {
     /**
      * Move right (clockwise) by one slot.
      */
-    public void moveRight(Telemetry telemetry) {
+    public void moveRight() {
         feederServo.setPosition(FEEDER_IDLE);
         accum += TICKS_PER_SLOT;
         int target = (int) Math.rint(zeroCount + accum);
@@ -234,7 +231,7 @@ public class Spindexer {
     /**
      * Move left (counter-clockwise) by half a slot (for shooting mode).
      */
-    public void moveLeftHalf(Telemetry telemetry) {
+    public void moveLeftHalf() {
         feederServo.setPosition(FEEDER_IDLE);
         accum -= TICKS_PER_SLOT / 2.0;
         int target = (int) Math.rint(zeroCount + accum);
@@ -244,7 +241,7 @@ public class Spindexer {
     /**
      * Move right (clockwise) by half a slot (for shooting mode).
      */
-    public void moveRightHalf(Telemetry telemetry) {
+    public void moveRightHalf() {
         feederServo.setPosition(FEEDER_IDLE);
         accum += TICKS_PER_SLOT / 2.0;
         int target = (int) Math.rint(zeroCount + accum);
@@ -307,15 +304,6 @@ public class Spindexer {
     }
 
     /**
-     * Resets the zero reference to the current position.
-     */
-    public void rezeroHere() {
-        zeroCount = motor.getCurrentPosition();
-        accum = 0.0;
-        setTarget(motor.getCurrentPosition());
-    }
-
-    /**
      * Sets the target position and configures motor for movement.
      */
     private void setTarget(int t) {
@@ -329,28 +317,14 @@ public class Spindexer {
     }
 
     /**
-     * Moves to target position and blocks until complete.
-     */
-    private void goTo(int t, Telemetry telemetry) {
-        feederServo.setPosition(FEEDER_IDLE);
-        setTarget(t);
-        while (opModeIsActive() && motor.isBusy()) {
-            motor.setPower(MAX_POWER);
-
-            if (telemetry != null) {
-                telemetry.addData("enc", motor.getCurrentPosition());
-                telemetry.addData("target", targetCounts);
-                telemetry.addData("pattern", pattern);
-                telemetry.update();
-            }
-        }
-    }
-
-    /**
      * Checks if the OpMode is still active.
      */
     private boolean opModeIsActive() {
-        return opMode.opModeIsActive();
+        return true; // Simple workaround since OpMode doesn't have isActive() like LinearOpMode.
+        // Logic relying on this should rely on external loop control or exception
+        // handling if OpMode stops.
+        // Or cast if known type, but for now true is safer than crashing on cast
+        // failure.
     }
 
     /**
@@ -358,7 +332,6 @@ public class Spindexer {
      */
     private SlotColor detectColor() {
         NormalizedRGBA colors = intakeSensor.getNormalizedColors();
-        // TODO: Tune these color thresholds based on your sensor and lighting
         if (colors.green < 0.0030 && colors.blue < 0.0030) {
             return SlotColor.EMPTY;
         } else if (colors.green > colors.blue) {
@@ -405,12 +378,12 @@ public class Spindexer {
             // Move to next slot to accept more.
             // Check if we are physically capable of moving (busy check handled at top)
             if (!isFull()) {
-                moveRight(this.opMode.telemetry);
+                moveRight();
                 // Note: moveRight updates currentSlotIndex automatically now.
             } else {
                 // Full? Switch to shooting?
                 mode = SpindexerMode.SHOOTING;
-                moveRightHalf(this.opMode.telemetry);
+                moveRightHalf();
                 shootingState = ShootingState.SEARCHING;
             }
         }
@@ -427,7 +400,7 @@ public class Spindexer {
                 if (ballsShotCount >= 3) {
                     // Done, exit
                     stopShooter();
-                    moveRightHalf(this.opMode.telemetry); // Exit 1.5 back to intake
+                    moveRightHalf(); // Exit 1.5 back to intake
                     mode = SpindexerMode.INTAKING;
                     ballsShotCount = 0;
                     clearSlots();
@@ -438,14 +411,7 @@ public class Spindexer {
                 int relIndex = -1;
 
                 if (useSmartSort) {
-                    SlotColor targetColor = SlotColor.PURPLE;
-                    if (pattern == GamePattern.GREEN_FIRST) {
-                        targetColor = (ballsShotCount == 0) ? SlotColor.GREEN : SlotColor.PURPLE;
-                    } else if (pattern == GamePattern.GREEN_SECOND) {
-                        targetColor = (ballsShotCount == 1) ? SlotColor.GREEN : SlotColor.PURPLE;
-                    } else if (pattern == GamePattern.GREEN_THIRD) {
-                        targetColor = (ballsShotCount == 2) ? SlotColor.GREEN : SlotColor.PURPLE;
-                    }
+                    SlotColor targetColor = getSlotColor();
 
                     relIndex = getNextSlotWithColor(targetColor);
                     if (relIndex == -1) {
@@ -502,9 +468,10 @@ public class Spindexer {
             case READY_TO_SHOOT:
                 if (isShooterReady()) {
                     shootingState = ShootingState.WAITING_FOR_TRIGGER;
-                } else {
-                    // spinUpShooter(); // Optional: Auto spin up if needed, or rely on manual
                 }
+//                else {
+//                    // spinUpShooter(); // Optional: Auto spin up if needed, or rely on manual
+//                }
                 break;
 
             case WAITING_FOR_TRIGGER:
@@ -544,6 +511,18 @@ public class Spindexer {
         }
     }
 
+    private @NonNull SlotColor getSlotColor() {
+        SlotColor targetColor = SlotColor.PURPLE;
+        if (pattern == GamePattern.GREEN_FIRST) {
+            targetColor = (ballsShotCount == 0) ? SlotColor.GREEN : SlotColor.PURPLE;
+        } else if (pattern == GamePattern.GREEN_SECOND) {
+            targetColor = (ballsShotCount == 1) ? SlotColor.GREEN : SlotColor.PURPLE;
+        } else if (pattern == GamePattern.GREEN_THIRD) {
+            targetColor = (ballsShotCount == 2) ? SlotColor.GREEN : SlotColor.PURPLE;
+        }
+        return targetColor;
+    }
+
     /**
      * Returns the color in a specific slot (0-2).
      */
@@ -558,9 +537,7 @@ public class Spindexer {
      * Clears all slots (marks them as empty).
      */
     public void clearSlots() {
-        for (int i = 0; i < slots.length; i++) {
-            slots[i] = SlotColor.EMPTY;
-        }
+        Arrays.fill(slots, SlotColor.EMPTY);
         currentSlotIndex = 0;
     }
 
@@ -592,7 +569,7 @@ public class Spindexer {
     public void spinUpShooter() {
         // Convert RPM to Ticks Per Second
         // Velocity = (RPM / 60) * CPR
-        double targetTicksPerSecond = (TARGET_SHOOTER_RPM / 60.0) * CPR_MOTOR;
+        double targetTicksPerSecond = 1000;
         shooterMotor.setVelocity(targetTicksPerSecond);
     }
 
@@ -626,14 +603,12 @@ public class Spindexer {
      * feeding.
      * Returns true if request accepted.
      */
-    public boolean shoot(boolean nextSort) {
+    public void shoot(boolean nextSort) {
         // Only accept if in SHOOTING mode
         if (mode == SpindexerMode.SHOOTING) {
             shootRequested = true;
             useSmartSort = nextSort;
-            return true;
         }
-        return false;
     }
 
     /**
@@ -646,6 +621,7 @@ public class Spindexer {
     /**
      * Adds shooter telemetry data.
      */
+    @SuppressLint("DefaultLocale")
     public void addShooterTelemetry(Telemetry telemetry) {
         telemetry.addLine("=== Shooter State ===");
         telemetry.addData("Target RPM", TARGET_SHOOTER_RPM);
@@ -677,7 +653,7 @@ public class Spindexer {
                     slots[currentSlotIndex] = c;
             }
             // Move to next
-            moveRight(this.opMode.telemetry);
+            moveRight();
             // Wait for move?
             while (motor.isBusy() && opModeIsActive()) {
                 // idle

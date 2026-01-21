@@ -21,8 +21,8 @@ public class Constants {
         public static FollowerConstants followerConstants = new FollowerConstants()
                         .mass(12)
                         .forwardZeroPowerAcceleration(-187)
-                        .lateralZeroPowerAcceleration(-92);
-
+                        .lateralZeroPowerAcceleration(-92)
+                .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.001, 0.02));
         public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
         public static MecanumConstants driveConstants = new MecanumConstants()
