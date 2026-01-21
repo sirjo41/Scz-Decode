@@ -37,8 +37,7 @@ public class Spindexer {
     private static final double MAX_POWER = 1; // TODO: Tune max motor power
 
     // Shooter constants
-    public static final double TARGET_SHOOTER_RPM = 3500; // Default
-    private double currentTargetRPM = TARGET_SHOOTER_RPM;
+    public static final double TARGET_SHOOTER_RPM = 3500; // TODO: Tune target shooter velocity
     private static final double SHOOTER_VELOCITY_TOLERANCE = 200; // RPM tolerance for "ready" state
 
     // Shooter PID coefficients
@@ -76,8 +75,8 @@ public class Spindexer {
      */
     public enum SpindexerMode {
         INTAKING,
-        SHOOTING, // Sorted
-        RAPID_FIRE // Unsorted
+        READYTOSHOOT,
+        SHOOTING
     }
 
     // Hardware components
@@ -108,6 +107,7 @@ public class Spindexer {
         SEARCHING,
         MOVING,
         READY_TO_SHOOT,
+        WAITING_FOR_TRIGGER,
         FEEDING,
         SHOOTING_ACTION,
         COOLDOWN
@@ -115,7 +115,9 @@ public class Spindexer {
 
     private ShootingState shootingState = ShootingState.SEARCHING;
     private long shootTimer = 0;
-    private boolean autoRetract = true; // Default to true for auto-spindexer logic
+    private boolean shootRequested = false;
+    private boolean useSmartSort = true;
+    private boolean semiAutoMode = true; // Default to TeleOp behavior (wait for trigger)
 
     private int ballsShotCount = 0;
 
@@ -215,6 +217,7 @@ public class Spindexer {
         accum -= TICKS_PER_SLOT;
         int target = (int) Math.rint(zeroCount + accum);
         setTarget(target);
+        currentSlotIndex = (currentSlotIndex - 1 + slots.length) % slots.length;
     }
 
     /**
@@ -225,6 +228,7 @@ public class Spindexer {
         accum += TICKS_PER_SLOT;
         int target = (int) Math.rint(zeroCount + accum);
         setTarget(target);
+        currentSlotIndex = (currentSlotIndex + 1) % slots.length;
     }
 
     /**
@@ -245,6 +249,13 @@ public class Spindexer {
         accum += TICKS_PER_SLOT / 2.0;
         int target = (int) Math.rint(zeroCount + accum);
         setTarget(target);
+        // Half move usually implies transitioning to shooting, index shift handled
+        // elsewhere or logic specific
+        // For consistency, we might shift index if we consider the "active" slot
+        // changed?
+        // Let's assume Half Move pushes slot X out of intake view.
+        // currentSlotIndex = (currentSlotIndex + 1) % slots.length; // Optional? Stick
+        // to existing logic for now.
     }
 
     /**
@@ -258,15 +269,12 @@ public class Spindexer {
      * Sets the spindexer mode.
      */
     public void setMode(SpindexerMode mode) {
-        setMode(mode, true); // Default to auto-retract
-    }
-
-    public void setMode(SpindexerMode mode, boolean autoRetract) {
         this.mode = mode;
-        this.autoRetract = autoRetract;
-        if (mode == SpindexerMode.SHOOTING || mode == SpindexerMode.RAPID_FIRE) {
+        if (mode == SpindexerMode.SHOOTING) {
             shootingState = ShootingState.SEARCHING;
-            ballsShotCount = 0;
+            ballsShotCount = 0; // Reset count on manual entry? Maybe.
+            shootRequested = false;
+            useSmartSort = true; // Default to smart sort on entry
         }
     }
 
@@ -371,9 +379,6 @@ public class Spindexer {
         if (mode == SpindexerMode.SHOOTING) {
             updateAutoShoot();
             return;
-        } else if (mode == SpindexerMode.RAPID_FIRE) {
-            updateRapidFire();
-            return;
         }
 
         // Busy check: don't look for new balls while moving to the next slot
@@ -381,127 +386,36 @@ public class Spindexer {
             return;
         }
 
+        // Monitor current slot content continuously
         SlotColor detectedColor = detectColor();
+        if (detectedColor != SlotColor.EMPTY) {
+            slots[currentSlotIndex] = detectedColor;
+        }
 
-        // 1. Determine if *currently* detecting an object
+        // Logic for "New Ball Arrival" in TeleOp
+        // If we are *supposed* to be catching new balls, and we see one:
+        // 1. Keep it.
+        // 2. Move to next slot.
+
+        // Rising edge check for MOVE Trigger
         boolean objectCurrentlyDetected = (detectedColor == SlotColor.PURPLE || detectedColor == SlotColor.GREEN);
 
-        // 2. Rising edge check: Only act if we see an object NOW, but didn't see one
-        // BEFORE
         if (objectCurrentlyDetected && !lastColorDetected) {
-            // Store color in current slot and advance to next slot
-            if (currentSlotIndex < slots.length) {
-                slots[currentSlotIndex] = detectedColor;
-                currentSlotIndex = (currentSlotIndex + 1) % slots.length;
-
-                // Prioritize checking if full to switch mode
-                if (isFull()) {
-                    setMode(SpindexerMode.SHOOTING, true); // Auto-mode should retract when done
-                    moveRightHalf(this.opMode.telemetry); // Enter shooting position 1.5
-
-                    // Physical Correction: When we stop at intake (Slot 2) and move +0.5,
-                    // Slot 1 ends up at the shooter (180 deg away).
-                    // So we must shift our index reference by +1 to match physical reality.
-                    currentSlotIndex = (currentSlotIndex + 1) % slots.length;
-
-                    shootingState = ShootingState.SEARCHING; // Start sorting
-                } else {
-                    // Not full yet, just move to next slot
-                    moveRight(this.opMode.telemetry);
-                }
+            // We found a NEW ball.
+            // Move to next slot to accept more.
+            // Check if we are physically capable of moving (busy check handled at top)
+            if (!isFull()) {
+                moveRight(this.opMode.telemetry);
+                // Note: moveRight updates currentSlotIndex automatically now.
+            } else {
+                // Full? Switch to shooting?
+                mode = SpindexerMode.SHOOTING;
+                moveRightHalf(this.opMode.telemetry);
+                shootingState = ShootingState.SEARCHING;
             }
         }
 
-        // 3. Update state for next loop to enable edge detection
         lastColorDetected = objectCurrentlyDetected;
-    }
-
-    /**
-     * Handles rapid fire (no sorting).
-     */
-    public void updateRapidFire() {
-        switch (shootingState) {
-            case SEARCHING:
-                if (ballsShotCount >= 3) {
-                    if (autoRetract) {
-                        stopShooter();
-                        moveRightHalf(this.opMode.telemetry);
-                        mode = SpindexerMode.INTAKING;
-                        ballsShotCount = 0;
-                        clearSlots();
-                        return;
-                    } else {
-                        // Manual mode: Keep searching or reset count?
-                        // Ideally reset count so we can shoot more if they appear?
-                        ballsShotCount = 0;
-                    }
-                }
-
-                // Find ANY ball
-                int relIndex = getNextSlotWithColor(SlotColor.PURPLE);
-                if (relIndex == -1)
-                    relIndex = getNextSlotWithColor(SlotColor.GREEN);
-
-                if (relIndex == -1) {
-                    if (autoRetract) {
-                        ballsShotCount = 3;
-                        return;
-                    } else {
-                        // Stay in SEARCHING, don't exit
-                        return;
-                    }
-                }
-
-                // Move logic (Same as AutoShoot)
-                if (relIndex > 0) {
-                    int moveSteps = relIndex;
-                    if (moveSteps > 1) {
-                        moveSteps = -1;
-                    }
-                    accum += moveSteps * TICKS_PER_SLOT;
-                    int t = (int) Math.rint(zeroCount + accum);
-                    setTarget(t);
-                    currentSlotIndex = (currentSlotIndex + relIndex) % slots.length;
-                }
-                shootingState = ShootingState.MOVING;
-                break;
-
-            case MOVING:
-                if (!motor.isBusy()) {
-                    shootingState = ShootingState.READY_TO_SHOOT;
-                }
-                break;
-
-            case READY_TO_SHOOT:
-                spinUpShooter();
-                if (isShooterReady()) {
-                    feederServo.setPosition(FEEDER_FEEDING);
-                    shootTimer = System.currentTimeMillis();
-                    shootingState = ShootingState.FEEDING;
-                }
-                break;
-
-            case FEEDING:
-                spinUpShooter();
-                if (System.currentTimeMillis() - shootTimer > 500) {
-                    feederServo.setPosition(FEEDER_IDLE);
-                    shootingState = ShootingState.SHOOTING_ACTION;
-                }
-                break;
-
-            case SHOOTING_ACTION:
-                slots[currentSlotIndex] = SlotColor.EMPTY;
-                ballsShotCount++;
-                shootingState = ShootingState.COOLDOWN;
-                shootTimer = System.currentTimeMillis();
-                // Intentional fall-through
-
-            case COOLDOWN:
-                if (System.currentTimeMillis() - shootTimer > 100) { // Faster cooldown for rapid?
-                    shootingState = ShootingState.SEARCHING;
-                }
-                break;
-        }
     }
 
     /**
@@ -511,43 +425,51 @@ public class Spindexer {
         switch (shootingState) {
             case SEARCHING:
                 if (ballsShotCount >= 3) {
-                    if (autoRetract) {
-                        // Done, exit
-                        stopShooter();
-                        moveRightHalf(this.opMode.telemetry); // Exit 1.5 back to intake
-                        mode = SpindexerMode.INTAKING;
-                        ballsShotCount = 0;
-                        clearSlots();
-                        return;
-                    } else {
-                        ballsShotCount = 0; // Reset for manual
+                    // Done, exit
+                    stopShooter();
+                    moveRightHalf(this.opMode.telemetry); // Exit 1.5 back to intake
+                    mode = SpindexerMode.INTAKING;
+                    ballsShotCount = 0;
+                    clearSlots();
+                    return;
+                }
+
+                // Determine target - Smart Sort vs Sequential
+                int relIndex = -1;
+
+                if (useSmartSort) {
+                    SlotColor targetColor = SlotColor.PURPLE;
+                    if (pattern == GamePattern.GREEN_FIRST) {
+                        targetColor = (ballsShotCount == 0) ? SlotColor.GREEN : SlotColor.PURPLE;
+                    } else if (pattern == GamePattern.GREEN_SECOND) {
+                        targetColor = (ballsShotCount == 1) ? SlotColor.GREEN : SlotColor.PURPLE;
+                    } else if (pattern == GamePattern.GREEN_THIRD) {
+                        targetColor = (ballsShotCount == 2) ? SlotColor.GREEN : SlotColor.PURPLE;
                     }
-                }
 
-                // Determine target color
-                SlotColor targetColor = SlotColor.PURPLE;
-                if (pattern == GamePattern.GREEN_FIRST) {
-                    targetColor = (ballsShotCount == 0) ? SlotColor.GREEN : SlotColor.PURPLE;
-                } else if (pattern == GamePattern.GREEN_SECOND) {
-                    targetColor = (ballsShotCount == 1) ? SlotColor.GREEN : SlotColor.PURPLE;
-                } else if (pattern == GamePattern.GREEN_THIRD) {
-                    targetColor = (ballsShotCount == 2) ? SlotColor.GREEN : SlotColor.PURPLE;
-                }
-
-                int relIndex = getNextSlotWithColor(targetColor);
-                if (relIndex == -1) {
-                    // Fallback: search for ANY non-empty
-                    relIndex = getNextSlotWithColor(SlotColor.PURPLE);
-                    if (relIndex == -1)
-                        relIndex = getNextSlotWithColor(SlotColor.GREEN);
+                    relIndex = getNextSlotWithColor(targetColor);
                     if (relIndex == -1) {
-                        if (autoRetract) {
-                            ballsShotCount = 3; // Force exit
-                            return;
-                        } else {
-                            return; // Stay searching
+                        // Fallback: search for ANY non-empty
+                        relIndex = getNextSlotWithColor(SlotColor.PURPLE);
+                        if (relIndex == -1)
+                            relIndex = getNextSlotWithColor(SlotColor.GREEN);
+                    }
+                } else {
+                    // No Sort - Find nearest non-empty slot (0, 1, 2)
+                    for (int i = 0; i < slots.length; i++) {
+                        // Check slot at relative index i
+                        int checkIndex = (currentSlotIndex + i) % slots.length;
+                        if (slots[checkIndex] != SlotColor.EMPTY) {
+                            relIndex = i;
+                            break;
                         }
                     }
+                }
+
+                if (relIndex == -1) {
+                    // No balls left?
+                    ballsShotCount = 3; // Force exit
+                    return;
                 }
 
                 // Move to that slot
@@ -578,16 +500,29 @@ public class Spindexer {
                 break;
 
             case READY_TO_SHOOT:
-                spinUpShooter();
                 if (isShooterReady()) {
+                    shootingState = ShootingState.WAITING_FOR_TRIGGER;
+                } else {
+                    // spinUpShooter(); // Optional: Auto spin up if needed, or rely on manual
+                }
+                break;
+
+            case WAITING_FOR_TRIGGER:
+                // Wait here until user presses Y (shootRequested) OR we are in fully auto mode
+                if ((shootRequested || !semiAutoMode) && isShooterReady()) {
                     feederServo.setPosition(FEEDER_FEEDING);
                     shootTimer = System.currentTimeMillis();
                     shootingState = ShootingState.FEEDING;
+                    shootRequested = false; // Reset trigger
                 }
                 break;
 
             case FEEDING:
-                spinUpShooter(); // Keep spinning
+                // spinUpShooter(); // Managed manually now? Or keep spinning during feed?
+                // Let's keep spinning if they are holding trigger, or we can force it.
+                // For safety, let's force spin while feeding to ensure momentum
+                // spinUpShooter();
+
                 if (System.currentTimeMillis() - shootTimer > 500) { // Wait 500ms for feed
                     feederServo.setPosition(FEEDER_IDLE);
                     shootingState = ShootingState.SHOOTING_ACTION;
@@ -657,12 +592,8 @@ public class Spindexer {
     public void spinUpShooter() {
         // Convert RPM to Ticks Per Second
         // Velocity = (RPM / 60) * CPR
-        double targetTicksPerSecond = (currentTargetRPM / 60.0) * CPR_MOTOR;
+        double targetTicksPerSecond = (TARGET_SHOOTER_RPM / 60.0) * CPR_MOTOR;
         shooterMotor.setVelocity(targetTicksPerSecond);
-    }
-
-    public void setTargetShooterRPM(double rpm) {
-        this.currentTargetRPM = rpm;
     }
 
     /**
@@ -687,17 +618,19 @@ public class Spindexer {
      */
     public boolean isShooterReady() {
         double currentVelocity = getShooterRPM();
-        return (Math.abs(currentVelocity) >= currentTargetRPM);
+        return (Math.abs(currentVelocity) >= TARGET_SHOOTER_RPM);
     }
 
     /**
-     * Feeds a ball into the shooter when ready and in SHOOTING mode.
-     * Returns true if fed, false if shooter not ready or not in shooting mode.
+     * Sets the shoot request flag. The state machine will handle the actual
+     * feeding.
+     * Returns true if request accepted.
      */
-    public boolean shoot() {
-        // Only shoot if in SHOOTING mode AND shooter is ready
+    public boolean shoot(boolean nextSort) {
+        // Only accept if in SHOOTING mode
         if (mode == SpindexerMode.SHOOTING) {
-            feederServo.setPosition(FEEDER_FEEDING);
+            shootRequested = true;
+            useSmartSort = nextSort;
             return true;
         }
         return false;
@@ -727,5 +660,32 @@ public class Spindexer {
         telemetry.addData("RED", colors.red);
         telemetry.addData("BLUE", colors.blue);
         telemetry.addData("Green", colors.green);
+    }
+
+    /**
+     * Scans all slots to detect pre-loaded balls.
+     * Rotates one full revolution.
+     */
+    public void scanSlots() {
+        for (int i = 0; i < 3; i++) {
+            // Wait a bit for sensor (blocking in auto init/start typically ok-ish if brief)
+            long start = System.currentTimeMillis();
+            while (System.currentTimeMillis() - start < 200) {
+                // Sample color
+                SlotColor c = detectColor();
+                if (c != SlotColor.EMPTY)
+                    slots[currentSlotIndex] = c;
+            }
+            // Move to next
+            moveRight(this.opMode.telemetry);
+            // Wait for move?
+            while (motor.isBusy() && opModeIsActive()) {
+                // idle
+            }
+        }
+    }
+
+    public void setSemiAutoMode(boolean enabled) {
+        this.semiAutoMode = enabled;
     }
 }

@@ -18,16 +18,17 @@ public class ColorTest extends OpMode {
         ss.setPosition(1);
     }
 
-
     @Override
-    public void loop() {
-        if (gamepad1.a){
+    pu  blic
+
+    void loop() {
+        if (gamepad1.a) {
             ss.setPosition(0.55);
         } else if (gamepad1.b) {
             ss.setPosition(1);
         }
 
-        telemetry.addData("spin",ss.getPosition());
+        telemetry.addData("spin", ss.getPosition());
         telemetry.update();
     }
 }

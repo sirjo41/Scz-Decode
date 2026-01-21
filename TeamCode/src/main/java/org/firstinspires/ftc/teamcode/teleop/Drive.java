@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
-import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -41,7 +40,6 @@ public class Drive extends LinearOpMode {
     private boolean lastDpUp = false;
     private boolean lastDpDown = false;
     private boolean lastRightBumper = false;
-    private boolean manualShootingActive = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -159,43 +157,6 @@ public class Drive extends LinearOpMode {
                 spindexer.setGamePattern(patterns[nextIdx]);
             }
 
-            // --- Auto-Aim & Shooting Logic ---
-            boolean isSortingShoot = gamepad1.x;
-            boolean isRapidShoot = gamepad1.y;
-
-            if (isSortingShoot || isRapidShoot) {
-                manualShootingActive = true;
-
-                // Auto-Align using Limelight
-                LLResult result = limelight.getLatestResult();
-                if (result != null && result.isValid()) {
-                    // Turn to target (Tx)
-                    double tx = result.getTx();
-                    rx = -tx * 0.03; // P-Controller for turning
-
-                    // Distance/RPM Calculation (Ty)
-                    double ty = result.getTy();
-                    // Tuning req: RPM = Base + (Ty * Factor)
-                    double calculatedRPM = 3500 + (ty * 10);
-                    spindexer.setTargetShooterRPM(calculatedRPM);
-                }
-
-                // Set Modes
-                if (isSortingShoot) {
-                    if (spindexer.getMode() != Spindexer.SpindexerMode.SHOOTING) {
-                        spindexer.setMode(Spindexer.SpindexerMode.SHOOTING, false); // Manual = false autoRetract
-                    }
-                } else {
-                    if (spindexer.getMode() != Spindexer.SpindexerMode.RAPID_FIRE) {
-                        spindexer.setMode(Spindexer.SpindexerMode.RAPID_FIRE, false); // Manual = false autoRetract
-                    }
-                }
-            } else if (manualShootingActive) {
-                // Button released - Stop shooting and return to intake
-                spindexer.setMode(Spindexer.SpindexerMode.INTAKING, true);
-                manualShootingActive = false;
-            }
-
             // === 3. Shooter Control (Gamepad 1) ===
 
             boolean rightBumperEdge = gamepad1.right_bumper && !lastRightBumper;
@@ -204,33 +165,17 @@ public class Drive extends LinearOpMode {
             // Right Trigger: Spin up shooter
             if (gamepad1.right_trigger > 0.1) {
                 spindexer.spinUpShooter();
-            } else {
-                // If not spinning up, allow natural slowdown
-                // Don't actively stop to maintain momentum
+            } else if (gamepad1.b) {
+                spindexer.stopShooter();
             }
 
             if (gamepad1.y) {
-                spindexer.shoot();
+                // Manual trigger for shooting (Smart Sort)
+                spindexer.shoot(true);
             }
-            // Right Bumper: Shoot (feed ball when ready)
-            else if (rightBumperEdge) {
-                boolean fed = spindexer.shoot();
-                if (!fed) {
-                    // Could add haptic feedback or telemetry warning
-                }
-            } else if (gamepad1.right_bumper) {
-                // Keep feeding while held if needed, or rely on edge?
-                // Standardize: If Y OR Bumper is held, try to shoot.
-                spindexer.shoot();
-            }
-            // } else {
-            // // Retract feeder when neither is pressed
-            // spindexer.retractFeeder();
-            // }
-
-            // B Button: Kill switch - emergency stop shooter
-            if (gamepad1.b) {
-                spindexer.stopShooter();
+            if (gamepad1.x) {
+                // Manual trigger for shooting (No Sort / Sequential)
+                spindexer.shoot(false);
             }
 
             // === 4. Telemetry ===
