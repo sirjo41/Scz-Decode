@@ -19,7 +19,7 @@ public class ColorTest extends OpMode {
     }
 
     @Override
-    pu  blic
+    public
 
     void loop() {
         if (gamepad1.a) {
