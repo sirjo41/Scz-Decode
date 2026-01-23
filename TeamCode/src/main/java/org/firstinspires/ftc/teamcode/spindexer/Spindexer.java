@@ -40,7 +40,7 @@ public class Spindexer {
     private static final double MAX_POWER = 1;
 
     // Shooter constants
-    public static final double TARGET_SHOOTER_RPM = 3500; // TODO: Tune target shooter velocity
+    public static final double TARGET_SHOOTER_RPM = 1500; // TODO: Tune target shooter velocity
     private static final double SHOOTER_VELOCITY_TOLERANCE = 200; // RPM tolerance for "ready" state
 
     // Shooter PID coefficients
@@ -569,7 +569,7 @@ public class Spindexer {
     public void spinUpShooter() {
         // Convert RPM to Ticks Per Second
         // Velocity = (RPM / 60) * CPR
-        double targetTicksPerSecond = 1000;
+        double targetTicksPerSecond = TARGET_SHOOTER_RPM;
         shooterMotor.setVelocity(targetTicksPerSecond);
     }
 
@@ -587,7 +587,7 @@ public class Spindexer {
     public double getShooterRPM() {
         double ticksPerSecond = shooterMotor.getVelocity();
         // RPM = (TicksPerSec / CPR) * 60
-        return (ticksPerSecond / CPR_MOTOR) * 60.0;
+        return (ticksPerSecond );
     }
 
     /**

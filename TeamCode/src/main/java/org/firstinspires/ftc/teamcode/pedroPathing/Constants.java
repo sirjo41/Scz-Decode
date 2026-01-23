@@ -22,7 +22,8 @@ public class Constants {
                         .mass(12)
                         .forwardZeroPowerAcceleration(-187)
                         .lateralZeroPowerAcceleration(-92)
-                .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.001, 0.02));
+                .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.001, 0.02))
+                .headingPIDFCoefficients(new PIDFCoefficients(1,0,0,0.03));
         public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
         public static MecanumConstants driveConstants = new MecanumConstants()
@@ -36,7 +37,7 @@ public class Constants {
                         .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
                         .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
                         .xVelocity(72)
-                        .yVelocity(55)
+                        .yVelocity(55);
         // .robotWidth(17.5)
         // .robotLength(17)
         ;
