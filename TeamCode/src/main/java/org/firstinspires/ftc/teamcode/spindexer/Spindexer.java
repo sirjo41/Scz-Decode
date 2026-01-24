@@ -116,7 +116,6 @@ public class Spindexer {
     private ShootingState shootingState = ShootingState.SEARCHING;
     private long shootTimer = 0;
     private boolean shootRequested = false;
-    private boolean useSmartSort = true;
     private boolean semiAutoMode = true; // Default to TeleOp behavior (wait for trigger)
 
     private int ballsShotCount = 0;
@@ -271,7 +270,6 @@ public class Spindexer {
             shootingState = ShootingState.SEARCHING;
             ballsShotCount = 0; // Reset count on manual entry? Maybe.
             shootRequested = false;
-            useSmartSort = true; // Default to smart sort on entry
         }
     }
 
@@ -406,11 +404,8 @@ public class Spindexer {
                     clearSlots();
                     return;
                 }
-
-                // Determine target - Smart Sort vs Sequential
                 int relIndex = -1;
 
-                if (useSmartSort) {
                     SlotColor targetColor = getSlotColor();
 
                     relIndex = getNextSlotWithColor(targetColor);
@@ -420,18 +415,6 @@ public class Spindexer {
                         if (relIndex == -1)
                             relIndex = getNextSlotWithColor(SlotColor.GREEN);
                     }
-                } else {
-                    // No Sort - Find nearest non-empty slot (0, 1, 2)
-                    for (int i = 0; i < slots.length; i++) {
-                        // Check slot at relative index i
-                        int checkIndex = (currentSlotIndex + i) % slots.length;
-                        if (slots[checkIndex] != SlotColor.EMPTY) {
-                            relIndex = i;
-                            break;
-                        }
-                    }
-                }
-
                 if (relIndex == -1) {
                     // No balls left?
                     ballsShotCount = 3; // Force exit
@@ -451,9 +434,6 @@ public class Spindexer {
                     accum += moveSteps * TICKS_PER_SLOT;
                     int t = (int) Math.rint(zeroCount + accum);
                     setTarget(t); // Non-blocking set
-
-                    // Verify update of current index logic
-                    // We moved 'relIndex' slots forward (logically).
                     currentSlotIndex = (currentSlotIndex + relIndex) % slots.length;
                 }
                 shootingState = ShootingState.MOVING;
@@ -469,9 +449,6 @@ public class Spindexer {
                 if (isShooterReady()) {
                     shootingState = ShootingState.WAITING_FOR_TRIGGER;
                 }
-//                else {
-//                    // spinUpShooter(); // Optional: Auto spin up if needed, or rely on manual
-//                }
                 break;
 
             case WAITING_FOR_TRIGGER:
@@ -485,11 +462,6 @@ public class Spindexer {
                 break;
 
             case FEEDING:
-                // spinUpShooter(); // Managed manually now? Or keep spinning during feed?
-                // Let's keep spinning if they are holding trigger, or we can force it.
-                // For safety, let's force spin while feeding to ensure momentum
-                // spinUpShooter();
-
                 if (System.currentTimeMillis() - shootTimer > 500) { // Wait 500ms for feed
                     feederServo.setPosition(FEEDER_IDLE);
                     shootingState = ShootingState.SHOOTING_ACTION;
@@ -603,11 +575,10 @@ public class Spindexer {
      * feeding.
      * Returns true if request accepted.
      */
-    public void shoot(boolean nextSort) {
+    public void shoot() {
         // Only accept if in SHOOTING mode
         if (mode == SpindexerMode.SHOOTING) {
             shootRequested = true;
-            useSmartSort = nextSort;
         }
     }
 
