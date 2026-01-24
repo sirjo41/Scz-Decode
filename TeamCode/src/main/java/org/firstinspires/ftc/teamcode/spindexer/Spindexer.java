@@ -474,6 +474,7 @@ public class Spindexer {
                 ballsShotCount++;
                 shootingState = ShootingState.COOLDOWN;
                 shootTimer = System.currentTimeMillis();
+                break;
 
             case COOLDOWN:
                 if (System.currentTimeMillis() - shootTimer > 300) { // Wait 300ms before moving
