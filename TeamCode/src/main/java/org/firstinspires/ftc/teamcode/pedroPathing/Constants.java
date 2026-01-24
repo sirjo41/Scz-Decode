@@ -6,7 +6,6 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.FollowerBuilder;
 import com.pedropathing.ftc.drivetrains.MecanumConstants;
-import com.pedropathing.ftc.localization.Encoder;
 import com.pedropathing.ftc.localization.constants.PinpointConstants;
 import com.pedropathing.paths.PathConstraints;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
@@ -15,15 +14,14 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-import java.util.Map;
-
 public class Constants {
         public static FollowerConstants followerConstants = new FollowerConstants()
-                        .mass(12)
-                        .forwardZeroPowerAcceleration(-187)
-                        .lateralZeroPowerAcceleration(-92)
-                .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.001, 0.02))
-                .headingPIDFCoefficients(new PIDFCoefficients(1,0,0,0.03));
+                .mass(12)
+                .forwardZeroPowerAcceleration(-187)
+                .lateralZeroPowerAcceleration(-92)
+                .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.001, 0.04))
+                .headingPIDFCoefficients(new PIDFCoefficients(0.5,0,0,0.02))
+                .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025,0.0,0.00001,0.6,0.01));
         public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
         public static MecanumConstants driveConstants = new MecanumConstants()
@@ -38,8 +36,6 @@ public class Constants {
                         .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
                         .xVelocity(72)
                         .yVelocity(55);
-        // .robotWidth(17.5)
-        // .robotLength(17)
         ;
 
         public static Follower createFollower(HardwareMap hardwareMap) {

@@ -146,6 +146,7 @@ public class Drive extends LinearOpMode {
                 // Manual trigger for shooting (Smart Sort)
                 spindexer.shoot(true);
             }
+
             if (gamepad1.x) {
                 // Manual trigger for shooting (No Sort / Sequential)
                 spindexer.shoot(false);
