@@ -163,7 +163,7 @@ public class Spindexer {
      * Constructor - Initializes the spindexer with motor and intake system.
      */
     public Spindexer(OpMode opMode, DcMotorEx motor,
-                     NormalizedColorSensor intakeSensor, Servo feederServo, DcMotorEx shooterMotor) {
+            NormalizedColorSensor intakeSensor, Servo feederServo, DcMotorEx shooterMotor) {
         this.motor = motor;
         this.intakeSensor = intakeSensor;
         this.feederServo = feederServo;
@@ -382,6 +382,9 @@ public class Spindexer {
                 // Full? Switch to shooting?
                 mode = SpindexerMode.SHOOTING;
                 moveRightHalf();
+                // After half-move, we're positioned between slots.
+                // The "current" shooting position is now the next slot.
+                currentSlotIndex = (currentSlotIndex + 1) % slots.length;
                 shootingState = ShootingState.SEARCHING;
             }
         }
@@ -406,15 +409,15 @@ public class Spindexer {
                 }
                 int relIndex = -1;
 
-                    SlotColor targetColor = getSlotColor();
+                SlotColor targetColor = getSlotColor();
 
-                    relIndex = getNextSlotWithColor(targetColor);
-                    if (relIndex == -1) {
-                        // Fallback: search for ANY non-empty
-                        relIndex = getNextSlotWithColor(SlotColor.PURPLE);
-                        if (relIndex == -1)
-                            relIndex = getNextSlotWithColor(SlotColor.GREEN);
-                    }
+                relIndex = getNextSlotWithColor(targetColor);
+                if (relIndex == -1) {
+                    // Fallback: search for ANY non-empty
+                    relIndex = getNextSlotWithColor(SlotColor.PURPLE);
+                    if (relIndex == -1)
+                        relIndex = getNextSlotWithColor(SlotColor.GREEN);
+                }
                 if (relIndex == -1) {
                     // No balls left?
                     ballsShotCount = 3; // Force exit
@@ -434,6 +437,7 @@ public class Spindexer {
                     accum += moveSteps * TICKS_PER_SLOT;
                     int t = (int) Math.rint(zeroCount + accum);
                     setTarget(t); // Non-blocking set
+                    // Update index based on the target slot (relIndex), not the movement direction
                     currentSlotIndex = (currentSlotIndex + relIndex) % slots.length;
                 }
                 shootingState = ShootingState.MOVING;
@@ -560,7 +564,7 @@ public class Spindexer {
     public double getShooterRPM() {
         double ticksPerSecond = shooterMotor.getVelocity();
         // RPM = (TicksPerSec / CPR) * 60
-        return (ticksPerSecond );
+        return (ticksPerSecond);
     }
 
     /**
