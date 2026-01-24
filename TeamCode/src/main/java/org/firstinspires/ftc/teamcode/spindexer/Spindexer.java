@@ -382,9 +382,9 @@ public class Spindexer {
                 // Full? Switch to shooting?
                 mode = SpindexerMode.SHOOTING;
                 moveRightHalf();
-                // After half-move, we're positioned between slots.
-                // The "current" shooting position is now the next slot.
-                currentSlotIndex = (currentSlotIndex + 1) % slots.length;
+                // After half-move right from intake, the shooting position is one slot back
+                // If we were at slot 2 (just detected ball), shooting is now at slot 1
+                currentSlotIndex = (currentSlotIndex - 1 + slots.length) % slots.length;
                 shootingState = ShootingState.SEARCHING;
             }
         }
