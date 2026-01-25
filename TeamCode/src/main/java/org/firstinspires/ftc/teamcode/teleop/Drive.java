@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.teamcode.spindexer.Shooter;
 import org.firstinspires.ftc.teamcode.spindexer.Spindexer;
 
 @TeleOp(name = "Drive", group = "TeleOp")
@@ -50,7 +52,8 @@ public class Drive extends LinearOpMode {
         DcMotorEx shooterMotor = hardwareMap.get(DcMotorEx.class, SHOOTER_MOTOR);
         shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         // Subsystems
-        Spindexer spindexer = new Spindexer(this, spinMotor, intakeSensor, feederServo, shooterMotor);
+        Shooter shooter = new Shooter(shooterMotor, feederServo);
+        Spindexer spindexer = new Spindexer(this, spinMotor, intakeSensor, shooter);
 
         // Intake Motor
         DcMotor intake = hardwareMap.get(DcMotor.class, INTAKE_MOTOR);
@@ -98,6 +101,9 @@ public class Drive extends LinearOpMode {
 
             // Update intake system (auto-detect balls and track slots)
             spindexer.updateIntake();
+
+            // Update shooter to maintain velocity
+            spindexer.updateShooter();
 
             // BACK Button: Emergency Stop Spindexer
             if (gamepad1.back) {

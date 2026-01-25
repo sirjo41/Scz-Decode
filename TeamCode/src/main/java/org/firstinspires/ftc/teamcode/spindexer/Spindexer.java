@@ -30,7 +30,7 @@ public class Spindexer {
 
     // PID coefficients for position control
     public static final PIDFCoefficients POS_PIDF = new PIDFCoefficients(
-            12, // TODO: Tune P coefficient
+            1, // TODO: Tune P coefficient
             0,
             0.15,
             0.0);
@@ -38,21 +38,6 @@ public class Spindexer {
     // Motor control parameters
     private static final int TARGET_TOL = 1;
     private static final double MAX_POWER = 1;
-
-    // Shooter constants
-    public static final double TARGET_SHOOTER_RPM = 1500; // TODO: Tune target shooter velocity
-    private static final double SHOOTER_VELOCITY_TOLERANCE = 200; // RPM tolerance for "ready" state
-
-    // Shooter PID coefficients
-    // Shooter PID coefficients
-    public static final double SHOOTER_P = 0; // Tune: Start with 10% of F
-    public static final double SHOOTER_I = 0.0;
-    public static final double SHOOTER_D = 0.0;
-    public static final double SHOOTER_F = 24; // Tune: 32767 / MaxTicksPerSec (approx 2700 for 6000RPM motor)
-
-    // Servo positions
-    private static final double FEEDER_IDLE = 1.0;
-    private static final double FEEDER_FEEDING = 0.55;
 
     /**
      * Game pattern enumeration.
@@ -83,8 +68,7 @@ public class Spindexer {
     // Hardware components
     private final DcMotorEx motor;
     private final NormalizedColorSensor intakeSensor;
-    private final Servo feederServo;
-    private final DcMotorEx shooterMotor;
+    private final Shooter shooter;
 
     // State tracking
     private int zeroCount = 0;
@@ -163,11 +147,10 @@ public class Spindexer {
      * Constructor - Initializes the spindexer with motor and intake system.
      */
     public Spindexer(OpMode opMode, DcMotorEx motor,
-            NormalizedColorSensor intakeSensor, Servo feederServo, DcMotorEx shooterMotor) {
+            NormalizedColorSensor intakeSensor, Shooter shooter) {
         this.motor = motor;
         this.intakeSensor = intakeSensor;
-        this.feederServo = feederServo;
-        this.shooterMotor = shooterMotor;
+        this.shooter = shooter;
 
         // Configure motor for position control
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -191,25 +174,13 @@ public class Spindexer {
 
         // Initialize all slots as empty
         Arrays.fill(slots, SlotColor.EMPTY);
-
-        // Initialize feeder servo to idle position
-        feederServo.setPosition(FEEDER_IDLE);
-
-        // Initialize shooter motor
-        shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
-        // Apply PIDF coefficients for velocity control
-        // Note: F (Feedforward) is critical for velocity! F = 32767 / MaxTicksPerSec
-        PIDFCoefficients currentShooterPIDF = new PIDFCoefficients(SHOOTER_P, SHOOTER_I, SHOOTER_D, SHOOTER_F);
-        shooterMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, currentShooterPIDF);
     }
 
     /**
      * Move left (counter-clockwise) by one slot.
      */
     public void moveLeft() {
-        feederServo.setPosition(FEEDER_IDLE);
+        shooter.retractFeeder();
         accum -= TICKS_PER_SLOT;
         int target = (int) Math.rint(zeroCount + accum);
         setTarget(target);
@@ -220,7 +191,7 @@ public class Spindexer {
      * Move right (clockwise) by one slot.
      */
     public void moveRight() {
-        feederServo.setPosition(FEEDER_IDLE);
+        shooter.retractFeeder();
         accum += TICKS_PER_SLOT;
         int target = (int) Math.rint(zeroCount + accum);
         setTarget(target);
@@ -231,7 +202,7 @@ public class Spindexer {
      * Move left (counter-clockwise) by half a slot (for shooting mode).
      */
     public void moveLeftHalf() {
-        feederServo.setPosition(FEEDER_IDLE);
+        shooter.retractFeeder();
         accum -= TICKS_PER_SLOT / 2.0;
         int target = (int) Math.rint(zeroCount + accum);
         setTarget(target);
@@ -241,7 +212,7 @@ public class Spindexer {
      * Move right (clockwise) by half a slot (for shooting mode).
      */
     public void moveRightHalf() {
-        feederServo.setPosition(FEEDER_IDLE);
+        shooter.retractFeeder();
         accum += TICKS_PER_SLOT / 2.0;
         int target = (int) Math.rint(zeroCount + accum);
         setTarget(target);
@@ -305,7 +276,7 @@ public class Spindexer {
      * Sets the target position and configures motor for movement.
      */
     private void setTarget(int t) {
-        feederServo.setPosition(FEEDER_IDLE);
+        shooter.retractFeeder();
         targetCounts = t;
         motor.setTargetPosition(targetCounts);
         if (motor.getMode() != DcMotor.RunMode.RUN_TO_POSITION) {
@@ -396,11 +367,14 @@ public class Spindexer {
      * Handles the sorting and shooting sequence.
      */
     public void updateAutoShoot() {
+        // Continuously maintain shooter speed during shooting mode
+        shooter.spinUpShooter();
+
         switch (shootingState) {
             case SEARCHING:
                 if (ballsShotCount >= 3) {
                     // Done, exit
-                    stopShooter();
+                    shooter.stopShooter();
                     moveRightHalf(); // Exit 1.5 back to intake
                     mode = SpindexerMode.INTAKING;
                     ballsShotCount = 0;
@@ -436,8 +410,7 @@ public class Spindexer {
 
                     accum += moveSteps * TICKS_PER_SLOT;
                     int t = (int) Math.rint(zeroCount + accum);
-                    setTarget(t); // Non-blocking set
-                    // Update index based on the target slot (relIndex), not the movement direction
+                    setTarget(t);
                     currentSlotIndex = (currentSlotIndex + relIndex) % slots.length;
                 }
                 shootingState = ShootingState.MOVING;
@@ -450,15 +423,14 @@ public class Spindexer {
                 break;
 
             case READY_TO_SHOOT:
-                if (isShooterReady()) {
+                if (shooter.isShooterReady()) {
                     shootingState = ShootingState.WAITING_FOR_TRIGGER;
                 }
                 break;
 
             case WAITING_FOR_TRIGGER:
-                // Wait here until user presses Y (shootRequested) OR we are in fully auto mode
-                if ((shootRequested || !semiAutoMode) && isShooterReady()) {
-                    feederServo.setPosition(FEEDER_FEEDING);
+                if ((shootRequested || !semiAutoMode) && shooter.isShooterReady()) {
+                    shooter.feed();
                     shootTimer = System.currentTimeMillis();
                     shootingState = ShootingState.FEEDING;
                     shootRequested = false; // Reset trigger
@@ -467,7 +439,7 @@ public class Spindexer {
 
             case FEEDING:
                 if (System.currentTimeMillis() - shootTimer > 500) { // Wait 500ms for feed
-                    feederServo.setPosition(FEEDER_IDLE);
+                    shooter.retractFeeder();
                     shootingState = ShootingState.SHOOTING_ACTION;
                 }
                 break;
@@ -535,7 +507,7 @@ public class Spindexer {
      */
     public void emergencyStop() {
         motor.setPower(0);
-        stopShooter();
+        shooter.stopShooter();
     }
 
     // ==================== SHOOTER METHODS ====================
@@ -544,35 +516,36 @@ public class Spindexer {
      * Spins up the shooter motor to target velocity.
      */
     public void spinUpShooter() {
-        // Convert RPM to Ticks Per Second
-        // Velocity = (RPM / 60) * CPR
-        double targetTicksPerSecond = TARGET_SHOOTER_RPM;
-        shooterMotor.setVelocity(targetTicksPerSecond);
+        shooter.spinUpShooter();
     }
 
     /**
      * Stops the shooter motor.
      */
     public void stopShooter() {
-        shooterMotor.setVelocity(0);
-        feederServo.setPosition(FEEDER_IDLE);
+        shooter.stopShooter();
+    }
+
+    /**
+     * Call this every loop to maintain shooter velocity.
+     * This ensures the shooter keeps spinning even when trigger is released.
+     */
+    public void updateShooter() {
+        shooter.updateShooter();
     }
 
     /**
      * Gets the current shooter velocity in RPM.
      */
     public double getShooterRPM() {
-        double ticksPerSecond = shooterMotor.getVelocity();
-        // RPM = (TicksPerSec / CPR) * 60
-        return (ticksPerSecond);
+        return shooter.getShooterRPM();
     }
 
     /**
      * Checks if shooter is at target velocity and ready to shoot.
      */
     public boolean isShooterReady() {
-        double currentVelocity = getShooterRPM();
-        return (Math.abs(currentVelocity) >= TARGET_SHOOTER_RPM);
+        return shooter.isShooterReady();
     }
 
     /**
@@ -591,7 +564,7 @@ public class Spindexer {
      * Resets feeder to idle position.
      */
     public void retractFeeder() {
-        feederServo.setPosition(FEEDER_IDLE);
+        shooter.retractFeeder();
     }
 
     /**
@@ -599,11 +572,7 @@ public class Spindexer {
      */
     @SuppressLint("DefaultLocale")
     public void addShooterTelemetry(Telemetry telemetry) {
-        telemetry.addLine("=== Shooter State ===");
-        telemetry.addData("Target RPM", TARGET_SHOOTER_RPM);
-        telemetry.addData("Current RPM", String.format("%.0f", getShooterRPM()));
-        telemetry.addData("Shooter Ready", isShooterReady() ? "YES" : "NO");
-        telemetry.addData("Feeder Position", String.format("%.2f", feederServo.getPosition()));
+        shooter.addShooterTelemetry(telemetry);
     }
 
     public void addSensorTelemetry(Telemetry telemetry) {

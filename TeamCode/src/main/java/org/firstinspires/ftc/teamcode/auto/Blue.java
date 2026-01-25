@@ -15,9 +15,10 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.limelight.LimelightControl;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.spindexer.Shooter;
 import org.firstinspires.ftc.teamcode.spindexer.Spindexer;
 
-@Autonomous(name = "Blue", group = "Blue",preselectTeleOp = "Drive")
+@Autonomous(name = "Blue", group = "Blue", preselectTeleOp = "Drive")
 public class Blue extends OpMode {
 
     private Follower follower;
@@ -36,68 +37,61 @@ public class Blue extends OpMode {
     private static final String FEEDER_SERVO = "feeder";
     private static final String SHOOTER_MOTOR = "shooter";
 
-    // Poses
-    private final Pose startPose = new Pose(121.944, 124.860, Math.toRadians(126));
-    private final Pose shootPose = new Pose(101.000, 106.000, Math.toRadians(36));
-    private final Pose intake1Pose = new Pose(102.000, 83.500, Math.toRadians(0));
-    private final Pose feedPose = new Pose(125.000, 83.500, Math.toRadians(0));
-    private final Pose intake2Pose = new Pose(102.000, 59.700, Math.toRadians(0));
-    private final Pose feed2Pose = new Pose(125.000, 59.700, Math.toRadians(0));
-    private final Pose parkPose = new Pose(122.907, 75.421, Math.toRadians(0));
+    // Poses - Extracted from User's Path Data
+    private final Pose startPose = new Pose(21.234, 123.514, Math.toRadians(54)); // Start from Path1
+    private final Pose shootPose = new Pose(42.000, 102.000, Math.toRadians(136));
+    private final Pose intake1Pose = new Pose(42.000, 83.000, Math.toRadians(180));
+    private final Pose feed1Pose = new Pose(23.000, 83.000, Math.toRadians(180));
+    private final Pose intake2Pose = new Pose(42.000, 60.000, Math.toRadians(180));
+    private final Pose feed2Pose = new Pose(23.000, 60.000, Math.toRadians(180));
 
     // Paths
-    private PathChain toShoot1, intake1, feed1, toShoot2, intake2, feed2, toShoot3, park;
+    private PathChain toShoot1, intake1, feed1, toShoot2, intake2, feed2, toShoot3;
 
     // Pattern
     private Spindexer.GamePattern detectedPattern = Spindexer.GamePattern.GREEN_FIRST; // Default
 
     public void buildPaths() {
-        // Start -> Shoot 1
+        // Path1: Start -> Shoot 1
         toShoot1 = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, shootPose))
-                .setLinearHeadingInterpolation(startPose.getHeading(), shootPose.getHeading())
+                .setLinearHeadingInterpolation(Math.toRadians(54), Math.toRadians(136))
                 .build();
 
-        // Shoot 1 -> Intake 1
+        // Path2: Shoot 1 -> Intake 1
         intake1 = follower.pathBuilder()
                 .addPath(new BezierLine(shootPose, intake1Pose))
-                .setLinearHeadingInterpolation(shootPose.getHeading(), intake1Pose.getHeading())
+                .setLinearHeadingInterpolation(Math.toRadians(136), Math.toRadians(180))
                 .build();
 
-        // Intake 1 -> Feed 1 (backwards?)
+        // Path3: Intake 1 -> Feed 1
         feed1 = follower.pathBuilder()
-                .addPath(new BezierLine(intake1Pose, feedPose))
+                .addPath(new BezierLine(intake1Pose, feed1Pose))
                 .setTangentHeadingInterpolation()
                 .build();
 
-        // Feed 1 -> Shoot 2
+        // Path4: Feed 1 -> Shoot 2
         toShoot2 = follower.pathBuilder()
-                .addPath(new BezierLine(feedPose, shootPose))
-                .setLinearHeadingInterpolation(feedPose.getHeading(), shootPose.getHeading())
+                .addPath(new BezierLine(feed1Pose, shootPose))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(136))
                 .build();
 
-        // Shoot 2 -> Intake 2
+        // Path5: Shoot 2 -> Intake 2
         intake2 = follower.pathBuilder()
                 .addPath(new BezierLine(shootPose, intake2Pose))
-                .setLinearHeadingInterpolation(shootPose.getHeading(), intake2Pose.getHeading())
+                .setLinearHeadingInterpolation(Math.toRadians(136), Math.toRadians(180))
                 .build();
 
-        // Intake 2 -> Feed 2
+        // Path6: Intake 2 -> Feed 2
         feed2 = follower.pathBuilder()
                 .addPath(new BezierLine(intake2Pose, feed2Pose))
                 .setTangentHeadingInterpolation()
                 .build();
 
-        // Feed 2 -> Shoot 3
+        // Path7: Feed 2 -> Shoot 3
         toShoot3 = follower.pathBuilder()
                 .addPath(new BezierLine(feed2Pose, shootPose))
-                .setLinearHeadingInterpolation(feed2Pose.getHeading(), shootPose.getHeading())
-                .build();
-
-        // Shoot 3 -> Park
-        park = follower.pathBuilder()
-                .addPath(new BezierLine(shootPose, parkPose))
-                .setLinearHeadingInterpolation(shootPose.getHeading(), parkPose.getHeading())
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(136))
                 .build();
     }
 
@@ -208,15 +202,8 @@ public class Blue extends OpMode {
                 if (spindexer.getMode() == Spindexer.SpindexerMode.INTAKING) {
                     spindexer.stopShooter();
 
-                    // Park
-                    follower.followPath(park, true);
-                    setPathState(11);
-                }
-                break;
-
-            case 11: // Moving to Park
-                if (!follower.isBusy()) {
-                    setPathState(-1); // End
+                    // No Park path defined in user request, so we finish here
+                    setPathState(-1);
                 }
                 break;
         }
@@ -231,6 +218,7 @@ public class Blue extends OpMode {
     public void loop() {
         follower.update();
         spindexer.updateIntake(); // Keep tracking slots during intake phases
+        spindexer.updateShooter(); // Maintain shooter velocity
 
         autonomousPathUpdate();
 
@@ -260,7 +248,8 @@ public class Blue extends OpMode {
         DcMotorEx shooterMotor = hardwareMap.get(DcMotorEx.class, SHOOTER_MOTOR);
         shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        spindexer = new Spindexer(this, spinMotor, intakeSensor, feederServo, shooterMotor);
+        Shooter shooter = new Shooter(shooterMotor, feederServo);
+        spindexer = new Spindexer(this, spinMotor, intakeSensor, shooter);
         spindexer.setSemiAutoMode(false); // Enable fully auto shooting
 
         intake = hardwareMap.get(DcMotor.class, INTAKE_MOTOR);

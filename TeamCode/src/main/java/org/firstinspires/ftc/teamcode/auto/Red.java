@@ -15,9 +15,10 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.limelight.LimelightControl;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.spindexer.Shooter;
 import org.firstinspires.ftc.teamcode.spindexer.Spindexer;
 
-@Autonomous(name = "Red", group = "Red",preselectTeleOp = "Drive")
+@Autonomous(name = "Red", group = "Red", preselectTeleOp = "Drive")
 public class Red extends OpMode {
 
     private Follower follower;
@@ -231,6 +232,7 @@ public class Red extends OpMode {
     public void loop() {
         follower.update();
         spindexer.updateIntake(); // Keep tracking slots during intake phases
+        spindexer.updateShooter(); // Maintain shooter velocity
 
         autonomousPathUpdate();
 
@@ -260,7 +262,8 @@ public class Red extends OpMode {
         DcMotorEx shooterMotor = hardwareMap.get(DcMotorEx.class, SHOOTER_MOTOR);
         shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        spindexer = new Spindexer(this, spinMotor, intakeSensor, feederServo, shooterMotor);
+        Shooter shooter = new Shooter(shooterMotor, feederServo);
+        spindexer = new Spindexer(this, spinMotor, intakeSensor, shooter);
         spindexer.setSemiAutoMode(false); // Enable fully auto shooting
 
         intake = hardwareMap.get(DcMotor.class, INTAKE_MOTOR);
