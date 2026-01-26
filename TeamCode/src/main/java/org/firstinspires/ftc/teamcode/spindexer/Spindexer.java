@@ -30,14 +30,14 @@ public class Spindexer {
 
     // PID coefficients for position control
     public static final PIDFCoefficients POS_PIDF = new PIDFCoefficients(
-            1, // TODO: Tune P coefficient
+            0.5, // TODO: Tune P coefficient
             0,
             0.15,
             0.0);
 
     // Motor control parameters
     private static final int TARGET_TOL = 1;
-    private static final double MAX_POWER = 0.5;
+    private static final double MAX_POWER = 1;
 
     /**
      * Game pattern enumeration.
