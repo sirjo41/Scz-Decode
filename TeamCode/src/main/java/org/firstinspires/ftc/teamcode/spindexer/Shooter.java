@@ -22,7 +22,7 @@ public class Shooter {
     public static final double SHOOTER_P = 2.4; // Tune: Start with 10% of F
     public static final double SHOOTER_I = 0.0;
     public static final double SHOOTER_D = 0.0;
-    public static final double SHOOTER_F = 1; // Tune: 32767 / MaxTicksPerSec (approx 2700 for 6000RPM motor)
+    public static final double SHOOTER_F = 24; // Tune: 32767 / MaxTicksPerSec (approx 2700 for 6000RPM motor)
 
     // Servo positions
     private static final double FEEDER_IDLE = 1.0;

@@ -37,7 +37,7 @@ public class Spindexer {
 
     // Motor control parameters
     private static final int TARGET_TOL = 1;
-    private static final double MAX_POWER = 1;
+    private static final double MAX_POWER = 0.5;
 
     /**
      * Game pattern enumeration.
