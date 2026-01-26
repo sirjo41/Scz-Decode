@@ -14,10 +14,9 @@ import com.pedropathing.geometry.Pose;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@TeleOp(name = "PedroShooterTestSingleFile", group = "Testing")
+@TeleOp(name = "PedroShooterJoystickTest", group = "Testing")
 public class ShooterTest extends LinearOpMode {
 
-    // Shooter object declared here
     private Shooter shooter;
 
     private DcMotorEx shooterMotor;
@@ -27,29 +26,26 @@ public class ShooterTest extends LinearOpMode {
     private Follower follower;
     private Pose targetPose;
 
-    // Pedro to meters conversion
-    private static final double PEDRO_TO_METERS = 0.0254; // 1 Pedro unit = 1 inch = 0.0254 m
+    private static final double PEDRO_TO_METERS = 0.0254; // 1 Pedro unit = 1 inch
 
     @Override
     public void runOpMode() throws InterruptedException {
 
-        // === Initialize hardware ===
+        // Hardware initialization
         shooterMotor = hardwareMap.get(DcMotorEx.class, "shooterMotor");
         feederServo = hardwareMap.get(Servo.class, "feederServo");
         angleServo = hardwareMap.get(Servo.class, "angleServo");
 
-        // Initialize Shooter
         shooter = new Shooter(shooterMotor, feederServo, angleServo);
 
-        // Initialize PedroPathing Follower
         follower = Constants.createFollower(hardwareMap);
 
         // Starting Pose
         Pose startingPose = new Pose(22.355, 123.514, Math.toRadians(143));
         follower.setPose(startingPose);
 
-        // Target goal pose (Pedro units)
-        targetPose = new Pose(16, 131, 143); // replace with actual goal coordinates
+        // Target Pose
+        targetPose = new Pose(16, 131, Math.toRadians(143));
 
         telemetry.addLine("Initialization complete. Ready to start.");
         telemetry.update();
@@ -58,10 +54,23 @@ public class ShooterTest extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            // === CONTROLS ===
+            // =========================
+            // JOYSTICK DRIVE
+            // =========================
+            double driveY = -gamepad1.left_stick_y;
+            double driveX = -gamepad1.left_stick_x;
+            double turn = -gamepad1.right_stick_x;
+            follower.setTeleOpDrive(driveY, driveX, turn, true); // Robot-centric
+
+            // =========================
+            // CONTROLS
+            // =========================
+            // Press A → rotate to target heading only
             if (gamepad1.a) {
-                follower.setPose(startingPose);
-                telemetry.addLine("Robot position reset!");
+                Pose currentPose = follower.getPose();
+                Pose newPose = new Pose(currentPose.getX(), currentPose.getY(), targetPose.getHeading());
+                follower.setPose(newPose);
+                telemetry.addLine("Heading aligned to target!");
             }
 
             if (gamepad1.b) shooter.startShooter();
@@ -76,17 +85,18 @@ public class ShooterTest extends LinearOpMode {
 
             if (gamepad1.y) shooter.stopShooter();
 
-            // === Update shooter calculation (convert Pedro units → meters) ===
+            // Update shooter
             shooter.updateShootingSolution(follower, targetPose, PEDRO_TO_METERS);
 
-            // === Telemetry ===
-            telemetry.addLine("=== Robot Pose ===");
+            // =========================
+            // TELEMETRY
+            // =========================
             Pose pose = follower.getPose();
+            telemetry.addLine("=== Robot Pose ===");
             telemetry.addData("X (Pedro)", pose.getX());
             telemetry.addData("Y (Pedro)", pose.getY());
             telemetry.addData("Heading (deg)", Math.toDegrees(pose.getHeading()));
 
-            // Shooter telemetry
             shooter.addShooterTelemetry(telemetry);
 
             telemetry.update();
@@ -94,7 +104,7 @@ public class ShooterTest extends LinearOpMode {
     }
 
     // =========================
-    // Shooter class inside TeleOp
+    // Shooter class
     // =========================
     public static class Shooter {
 
@@ -105,7 +115,7 @@ public class ShooterTest extends LinearOpMode {
         private static final double ANGLE_AT_MAX = 60.0;
         private static final double GRAVITY = 9.81;
         private static final double GOAL_HEIGHT_METERS = 0.9;
-        private static final double SHOOTER_HEIGHT_METERS = 0.35;//TODO: tune
+        private static final double SHOOTER_HEIGHT_METERS = 0.35;
 
         private final DcMotorEx shooterMotor;
         private final Servo feederServo;
@@ -135,9 +145,6 @@ public class ShooterTest extends LinearOpMode {
             feederServo.setPosition(FEEDER_IDLE);
         }
 
-        /**
-         * Updated shooter calculation with Pedro→meters conversion
-         */
         public void updateShootingSolution(Follower follower, Pose targetPose, double pedroToMeters) {
             if (!shooterActive) {
                 shooterMotor.setVelocity(0);
@@ -147,12 +154,11 @@ public class ShooterTest extends LinearOpMode {
             Pose robotPose = follower.getPose();
             Vector robotVel = follower.getVelocity();
 
-            // Convert Pedro units → meters
             double dx = (targetPose.getX() - robotPose.getX()) * pedroToMeters;
             double dy = (targetPose.getY() - robotPose.getY()) * pedroToMeters;
             double distanceToGoal = Math.hypot(dx, dy);
 
-            double desiredAngleDeg = 60 - (distanceToGoal * 0.5); //TODO: tune as needed
+            double desiredAngleDeg = 60 - (distanceToGoal * 0.5);
             double desiredAngleRad = Math.toRadians(desiredAngleDeg);
 
             double heightDiff = GOAL_HEIGHT_METERS - SHOOTER_HEIGHT_METERS;
@@ -160,9 +166,9 @@ public class ShooterTest extends LinearOpMode {
             double term2 = 2 * Math.pow(Math.cos(desiredAngleRad), 2) * (distanceToGoal * Math.tan(desiredAngleRad) - heightDiff);
             double physicsVelocity = Math.sqrt(Math.abs(term1 / term2));
 
-            // Convert velocity to meters per second
-            double robotSpeedTowardsGoal = (robotVel.getXComponent() * pedroToMeters * Math.cos(Math.atan2(dy, dx))) +
-                    (robotVel.getYComponent() * pedroToMeters * Math.sin(Math.atan2(dy, dx)));
+            double angleToGoal = Math.atan2(dy, dx);
+            double robotSpeedTowardsGoal = (robotVel.getXComponent() * pedroToMeters * Math.cos(angleToGoal)) +
+                    (robotVel.getYComponent() * pedroToMeters * Math.sin(angleToGoal));
 
             double adjustedVelocity = physicsVelocity - robotSpeedTowardsGoal;
 
@@ -171,6 +177,7 @@ public class ShooterTest extends LinearOpMode {
 
         private void setShooterState(double velocityMetersPerSec, double angleDeg) {
             currentTargetRPM = velocityMetersPerSec * RPM_PER_METER_PER_SECOND;
+
             double servoRange = SERVO_MAX_POS - SERVO_MIN_POS;
             double angleRange = ANGLE_AT_MAX - ANGLE_AT_MIN;
             double servoPos = ((angleDeg - ANGLE_AT_MIN) / angleRange) * servoRange + SERVO_MIN_POS;
