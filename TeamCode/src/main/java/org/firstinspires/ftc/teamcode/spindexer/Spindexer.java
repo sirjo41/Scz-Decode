@@ -30,10 +30,10 @@ public class Spindexer {
 
     // PID coefficients for position control
     public static final PIDFCoefficients POS_PIDF = new PIDFCoefficients(
-            0.5, // TODO: Tune P coefficient
-            0,
-            0.15,
-            0.0);
+            0.2,
+            0.001,
+            0.05,
+            0.0032);
 
     // Motor control parameters
     private static final int TARGET_TOL = 1;
