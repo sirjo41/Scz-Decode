@@ -15,7 +15,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @TeleOp(name = "PedroShooterTestSingleFile", group = "Testing")
-public class ColorTest extends LinearOpMode {
+public class ShooterTest extends LinearOpMode {
 
     // Shooter object declared here
     private Shooter shooter;
