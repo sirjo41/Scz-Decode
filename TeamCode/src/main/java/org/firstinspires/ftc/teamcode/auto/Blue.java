@@ -67,7 +67,6 @@ public class Blue extends OpMode {
 
         // Path3: Intake 1 -> Feed 1
         feed1 = follower.pathBuilder()
-                .setBrakingStart(1)
                 .addPath(new BezierLine(intake1Pose, feed1Pose))
                 .setTangentHeadingInterpolation()
                 .build();
@@ -135,6 +134,7 @@ public class Blue extends OpMode {
                 if (!follower.isBusy()) {
                     /* At Intake 1 */
                     // Move to Feed 1
+                    follower.setMaxPower(0.5);
                     follower.followPath(feed1, true);
                     setPathState(4);
                 }
@@ -145,8 +145,8 @@ public class Blue extends OpMode {
                 if (!follower.isBusy()) {
                     /* At Feed 1 */
                     // Prepare to go back to shoot
-                    intake.setPower(0); // Stop intake
                     // Move to Shoot 2
+                    follower.setMaxPower(1);
                     follower.followPath(toShoot2, true);
                     setPathState(5);
                 }
@@ -155,7 +155,7 @@ public class Blue extends OpMode {
             case 5: // Moving to Shoot 2
                 if (!follower.isBusy()) {
                     /* Start Shooting Sequence 2 */
-                    spindexerauto.setMode(SpindexerAuto.SpindexerMode.SHOOTING);
+                    spindexerauto.setModeShooting();
                     spindexerauto.spinUpShooter();
                     setPathState(6);
                 }
@@ -176,6 +176,7 @@ public class Blue extends OpMode {
 
             case 7: // Moving to Intake 2
                 if (!follower.isBusy()) {
+                    follower.setMaxPower(0.5);
                     follower.followPath(feed2, true);
                     setPathState(8);
                 }
@@ -183,7 +184,7 @@ public class Blue extends OpMode {
 
             case 8: // Moving to Feed 2
                 if (!follower.isBusy()) {
-                    intake.setPower(0);
+                    follower.setMaxPower(1);
                     follower.followPath(toShoot3, true);
                     setPathState(9);
                 }
@@ -192,7 +193,7 @@ public class Blue extends OpMode {
             case 9: // Moving to Shoot 3
                 if (!follower.isBusy()) {
                     /* Start Shooting Sequence 3 */
-                    spindexerauto.setMode(SpindexerAuto.SpindexerMode.SHOOTING);
+                    spindexerauto.setModeShooting();
                     spindexerauto.spinUpShooter();
                     setPathState(10);
                 }
