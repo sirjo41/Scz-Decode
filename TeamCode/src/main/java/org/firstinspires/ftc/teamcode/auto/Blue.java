@@ -107,7 +107,7 @@ public class Blue extends OpMode {
             case 1: // Moving to Shoot 1
                 if (!follower.isBusy()) {
                     /* Start Shooting Sequence */
-                    spindexerauto.setMode(SpindexerAuto.SpindexerMode.SHOOTING);
+                    spindexerauto.setModeShooting();
                     spindexerauto.spinUpShooter(); // Ensure shooter is spinning
                     setPathState(2);
                 }

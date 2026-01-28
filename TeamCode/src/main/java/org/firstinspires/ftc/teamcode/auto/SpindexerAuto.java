@@ -115,6 +115,13 @@ public class SpindexerAuto {
     public void setMode(SpindexerMode mode) {
         this.mode = mode;
     }
+    public void setModeShooting(){
+        mode = SpindexerMode.SHOOTING;
+        shooter.spinUpShooter();
+        shootingState = ShootingState.SEARCHING;
+        moveHalfSlotRight();
+        currentSlotIndex = (currentSlotIndex - 1 + 3) % 3;
+    }
 
     public void spinUpShooter() {
         shooter.spinUpShooter();
@@ -172,8 +179,8 @@ public class SpindexerAuto {
             return;
 
         switch (shootingState) {
-
             case SEARCHING:
+                // Only exit if we hit the count. This stops the "instant flip" back to intake.
                 if (ballsShot >= 3) {
                     exitShooting();
                     return;
@@ -182,23 +189,24 @@ public class SpindexerAuto {
                 SlotColor target = getTargetColor();
                 int rel = findNextSlot(target);
 
-                if (rel == -1)
-                    rel = findAnyBall();
-                if (rel == -1) {
-                    exitShooting();
-                    return;
-                }
+                if (rel == -1) rel = findAnyBall();
+                if (rel == -1) return;
 
                 if (rel != 0) {
                     int move = (rel == 2) ? -1 : rel;
                     moveSlots(move);
+                    shootingState = ShootingState.MOVING; // Only move to MOVING if we actually need to rotate
+                } else {
+                    shootingState = ShootingState.MOVING;
                 }
-
-                shootingState = ShootingState.MOVING;
                 break;
 
             case MOVING:
-                if (!motor.isBusy() && shooter.isShooterReady()) {
+                // NEW: Added a tolerance check to ensure the motor is physically aligned
+                // before the feeder fires.
+                boolean motorAtTarget = Math.abs(motor.getCurrentPosition() - targetCounts) < 10;
+
+                if (!motor.isBusy() && motorAtTarget && shooter.isShooterReady()) {
                     shooter.feed();
                     timer = System.currentTimeMillis();
                     shootingState = ShootingState.FEEDING;
@@ -206,7 +214,7 @@ public class SpindexerAuto {
                 break;
 
             case FEEDING:
-                if (System.currentTimeMillis() - timer > 200) {
+                if (System.currentTimeMillis() - timer > 250) { // Slightly longer for safety
                     shooter.retractFeeder();
                     slots[currentSlotIndex] = SlotColor.EMPTY;
                     ballsShot++;
@@ -216,7 +224,7 @@ public class SpindexerAuto {
                 break;
 
             case POST_SHOT_DELAY:
-                if (System.currentTimeMillis() - timer > 120) {
+                if (System.currentTimeMillis() - timer > 150) {
                     shootingState = ShootingState.SEARCHING;
                 }
                 break;
