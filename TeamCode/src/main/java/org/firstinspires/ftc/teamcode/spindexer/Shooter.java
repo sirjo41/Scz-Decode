@@ -15,14 +15,14 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class Shooter {
 
     // Shooter constants
-    public static final double TARGET_SHOOTER_RPM = 1200; // TODO: Tune target shooter velocity
+    public static final double TARGET_SHOOTER_RPM = 1500; // TODO: Tune target shooter velocity
     private static final double SHOOTER_VELOCITY_TOLERANCE = 100; // RPM tolerance for "ready" state
 
     // Shooter PID coefficients
-    public static final double SHOOTER_P = 1; // Tune: Start with 10% of F
+    public static final double SHOOTER_P = 55; // Tune: Start with 10% of F
     public static final double SHOOTER_I = 0.0;
-    public static final double SHOOTER_D = 0.0003;
-    public static final double SHOOTER_F = 0.3; // Tune: 32767 / MaxTicksPerSec (approx 2700 for 6000RPM motor)
+    public static final double SHOOTER_D = 0.0;
+    public static final double SHOOTER_F = 15; // Tune: 32767 / MaxTicksPerSec (approx 2700 for 6000RPM motor)
 
     // Servo positions
     private static final double FEEDER_IDLE = 1.0;
