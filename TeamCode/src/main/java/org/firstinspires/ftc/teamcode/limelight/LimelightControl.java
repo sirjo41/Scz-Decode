@@ -67,7 +67,7 @@ public class LimelightControl {
      *
      * @return Resolved GamePattern or null if no valid tag found
      */
-    public SpindexerAuto.GamePattern getGamePatternFromTags() {
+    public Spindexer.GamePattern getGamePatternFromTags() {
         LLResult result = getLatestResult();
         if (result == null || !result.isValid()) {
             return null;
@@ -90,6 +90,33 @@ public class LimelightControl {
                 return Spindexer.GamePattern.GREEN_SECOND;
             case 23:
                 return Spindexer.GamePattern.GREEN_THIRD;
+            default:
+                return null;
+        }
+    }
+    public SpindexerAuto.GamePattern getGamePatternFromTagsAuto() {
+        LLResult result = getLatestResult();
+        if (result == null || !result.isValid()) {
+            return null;
+        }
+
+        // Get fiducial results (AprilTags)
+        List<LLResultTypes.FiducialResult> fidutials = result.getFiducialResults();
+        if (fidutials.isEmpty()) {
+            return null;
+        }
+
+        // Look at the first detected tag (usually the closest or most central depending
+        // on sorting)
+        int id = fidutials.get(0).getFiducialId();
+
+        switch (id) {
+            case 21:
+                return SpindexerAuto.GamePattern.GREEN_FIRST;
+            case 22:
+                return SpindexerAuto.GamePattern.GREEN_SECOND;
+            case 23:
+                return SpindexerAuto.GamePattern.GREEN_THIRD;
             default:
                 return null;
         }

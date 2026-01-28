@@ -24,8 +24,7 @@ public class SpindexerAuto {
     private static final int TARGET_TOL = 1;
     private static final double MAX_POWER = 0.8;
 
-    public static final PIDFCoefficients POS_PIDF =
-            new PIDFCoefficients(0.2, 0.001, 0.05, 0.0032);
+    public static final PIDFCoefficients POS_PIDF = new PIDFCoefficients(0.2, 0.001, 0.05, 0.0032);
 
     /* ================= ENUMS ================= */
 
@@ -80,9 +79,9 @@ public class SpindexerAuto {
     /* ================= CONSTRUCTOR ================= */
 
     public SpindexerAuto(OpMode opMode,
-                         DcMotorEx motor,
-                         NormalizedColorSensor intakeSensor,
-                         Shooter shooter) {
+            DcMotorEx motor,
+            NormalizedColorSensor intakeSensor,
+            Shooter shooter) {
 
         this.motor = motor;
         this.intakeSensor = intakeSensor;
@@ -96,7 +95,8 @@ public class SpindexerAuto {
 
         try {
             motor.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, POS_PIDF);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         zeroCount = motor.getCurrentPosition();
         targetCounts = zeroCount;
@@ -110,6 +110,18 @@ public class SpindexerAuto {
 
     public void setGamePattern(GamePattern pattern) {
         this.pattern = pattern;
+    }
+
+    public void setMode(SpindexerMode mode) {
+        this.mode = mode;
+    }
+
+    public void spinUpShooter() {
+        shooter.spinUpShooter();
+    }
+
+    public void stopShooter() {
+        shooter.stopShooter();
     }
 
     public SpindexerMode getMode() {
@@ -127,7 +139,8 @@ public class SpindexerAuto {
     /* ================= INTAKE ================= */
 
     public void updateIntake() {
-        if (mode != SpindexerMode.INTAKING || motor.isBusy()) return;
+        if (mode != SpindexerMode.INTAKING || motor.isBusy())
+            return;
 
         SlotColor detected = detectColor();
         boolean objectDetected = detected != SlotColor.EMPTY;
@@ -155,7 +168,8 @@ public class SpindexerAuto {
     /* ================= SHOOTING ================= */
 
     public void updateAutoShoot() {
-        if (mode != SpindexerMode.SHOOTING) return;
+        if (mode != SpindexerMode.SHOOTING)
+            return;
 
         switch (shootingState) {
 
@@ -168,7 +182,8 @@ public class SpindexerAuto {
                 SlotColor target = getTargetColor();
                 int rel = findNextSlot(target);
 
-                if (rel == -1) rel = findAnyBall();
+                if (rel == -1)
+                    rel = findAnyBall();
                 if (rel == -1) {
                     exitShooting();
                     return;
@@ -231,14 +246,16 @@ public class SpindexerAuto {
 
     private boolean isFull() {
         for (SlotColor c : slots)
-            if (c == SlotColor.EMPTY) return false;
+            if (c == SlotColor.EMPTY)
+                return false;
         return true;
     }
 
     private int findNextSlot(SlotColor c) {
         for (int i = 0; i < 3; i++) {
             int idx = (currentSlotIndex + i) % 3;
-            if (slots[idx] == c) return i;
+            if (slots[idx] == c)
+                return i;
         }
         return -1;
     }
@@ -266,8 +283,10 @@ public class SpindexerAuto {
 
     private SlotColor detectColor() {
         NormalizedRGBA c = intakeSensor.getNormalizedColors();
-        if (c.green > 0.05 && c.green > c.blue) return SlotColor.GREEN;
-        if (c.blue > 0.05 && c.blue > c.green) return SlotColor.PURPLE;
+        if (c.green > 0.05 && c.green > c.blue)
+            return SlotColor.GREEN;
+        if (c.blue > 0.05 && c.blue > c.green)
+            return SlotColor.PURPLE;
         return SlotColor.EMPTY;
     }
 
@@ -289,10 +308,12 @@ public class SpindexerAuto {
             long start = System.currentTimeMillis();
             while (System.currentTimeMillis() - start < 200) {
                 SlotColor c = detectColor();
-                if (c != SlotColor.EMPTY) slots[currentSlotIndex] = c;
+                if (c != SlotColor.EMPTY)
+                    slots[currentSlotIndex] = c;
             }
             moveSlots(1);
-            while (motor.isBusy()) {}
+            while (motor.isBusy()) {
+            }
         }
     }
 }

@@ -19,10 +19,10 @@ public class Shooter {
     private static final double SHOOTER_VELOCITY_TOLERANCE = 100; // RPM tolerance for "ready" state
 
     // Shooter PID coefficients
-    public static final double SHOOTER_P = 2.4; // Tune: Start with 10% of F
+    public static final double SHOOTER_P = 1; // Tune: Start with 10% of F
     public static final double SHOOTER_I = 0.0;
-    public static final double SHOOTER_D = 0.0;
-    public static final double SHOOTER_F = 24; // Tune: 32767 / MaxTicksPerSec (approx 2700 for 6000RPM motor)
+    public static final double SHOOTER_D = 0.0003;
+    public static final double SHOOTER_F = 0.3; // Tune: 32767 / MaxTicksPerSec (approx 2700 for 6000RPM motor)
 
     // Servo positions
     private static final double FEEDER_IDLE = 1.0;

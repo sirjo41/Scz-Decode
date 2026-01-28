@@ -100,8 +100,6 @@ public class Spindexer {
     private ShootingState shootingState = ShootingState.SEARCHING;
     private long shootTimer = 0;
     private boolean shootRequested = false;
-    private boolean semiAutoMode = true; // Default to TeleOp behavior (wait for trigger)
-
     private int ballsShotCount = 0;
 
     /**
@@ -429,7 +427,7 @@ public class Spindexer {
                 break;
 
             case WAITING_FOR_TRIGGER:
-                if (shootRequested || (!semiAutoMode && shooter.isShooterReady())) {
+                if (shootRequested) {
                     shooter.feed();
                     shootTimer = System.currentTimeMillis();
                     shootingState = ShootingState.FEEDING;
@@ -606,7 +604,4 @@ public class Spindexer {
         }
     }
 
-    public void setSemiAutoMode(boolean enabled) {
-        this.semiAutoMode = enabled;
-    }
 }
