@@ -1,10 +1,13 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
+import com.arcrobotics.ftclib.gamepad.GamepadEx;
+import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -30,6 +33,7 @@ public class Drive extends LinearOpMode {
     // Edge Detection
     private boolean lastDpUp = false;
     private boolean lastDpDown = false;
+    private boolean lastY = false;
 
     @Override
     public void runOpMode() {
@@ -59,6 +63,7 @@ public class Drive extends LinearOpMode {
         // Subsystems
         Shooter shooter = new Shooter(shooterMotor, feederServo);
         Spindexer spindexer = new Spindexer(this, spinMotor, intakeSensor, shooter);
+        GamepadEx gamepadEx = new GamepadEx(gamepad1);
 
         // Intake Motor
         DcMotor intake = hardwareMap.get(DcMotor.class, INTAKE_MOTOR);
@@ -90,13 +95,6 @@ public class Drive extends LinearOpMode {
 
             // === 2. Spindexer Control (Gamepad 1) ===
 
-            // Edge Detection
-            boolean dpUpEdge = gamepad1.dpad_up && !lastDpUp; // Cycle Pattern
-            boolean dpDownEdge = gamepad1.dpad_down && !lastDpDown; // Switch Mode
-
-            lastDpUp = gamepad1.dpad_up;
-            lastDpDown = gamepad1.dpad_down;
-
             // A: Intake (Run Intake)
             if (gamepad1.a) {
                 intake.setPower(1.0);
@@ -114,7 +112,7 @@ public class Drive extends LinearOpMode {
             }
 
             // DPad Down: Switch Mode (Intaking <-> Shooting) and move half-slot
-            if (dpDownEdge) {
+            if (gamepadEx.wasJustPressed(GamepadKeys.Button.DPAD_DOWN)) {
                 if (spindexer.getMode() == Spindexer.SpindexerMode.INTAKING) {
                     spindexer.setMode(Spindexer.SpindexerMode.SHOOTING);
                     spindexer.moveRightHalf(); // Move half-slot when switching to shooting
@@ -125,17 +123,18 @@ public class Drive extends LinearOpMode {
             }
 
             // DPad Left: Move spindexer left (full-slot always)
-            if (gamepad1.dpad_left) {
+            if (gamepadEx.wasJustPressed(GamepadKeys.Button.DPAD_LEFT)) {
                 spindexer.moveLeft();
             }
 
             // DPad Right: Move spindexer right (full-slot always)
-            if (gamepad1.dpad_right) {
+            if (gamepadEx.wasJustPressed(GamepadKeys.Button.DPAD_RIGHT)) {
                 spindexer.moveRight();
             }
 
+
             // DPad Up: Manual Pattern Cycle Override
-            if (dpUpEdge) {
+            if (gamepadEx.wasJustPressed(GamepadKeys.Button.DPAD_UP)) {
                 Spindexer.GamePattern current = spindexer.getGamePattern();
                 Spindexer.GamePattern[] patterns = Spindexer.GamePattern.values();
                 int nextIdx = (current.ordinal() + 1) % patterns.length;
@@ -147,12 +146,11 @@ public class Drive extends LinearOpMode {
             // Right Trigger: Spin up shooter
             if (gamepad1.right_trigger > 0.1) {
                 spindexer.spinUpShooter();
-            } else if (gamepad1.b) {
+            } else if (gamepadEx.wasJustPressed(GamepadKeys.Button.B)) {
                 spindexer.stopShooter();
             }
 
-            if (gamepad1.y) {
-                // Manual trigger for shooting (Smart Sort)
+            if (gamepadEx.wasJustPressed(GamepadKeys.Button.Y)) {
                 spindexer.shoot();
             }
 

@@ -392,7 +392,7 @@ public class Spindexer {
                 }
                 if (relIndex == -1) {
                     // No balls left?
-                    ballsShotCount = 3; // Force exit
+                   // ballsShotCount = 3; // Force exit
                     return;
                 }
 
