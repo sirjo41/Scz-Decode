@@ -429,7 +429,7 @@ public class Spindexer {
                 break;
 
             case WAITING_FOR_TRIGGER:
-                if ((shootRequested || !semiAutoMode) && shooter.isShooterReady()) {
+                if (shootRequested || (!semiAutoMode&& shooter.isShooterReady())) {
                     shooter.feed();
                     shootTimer = System.currentTimeMillis();
                     shootingState = ShootingState.FEEDING;
@@ -438,7 +438,7 @@ public class Spindexer {
                 break;
 
             case FEEDING:
-                if (System.currentTimeMillis() - shootTimer > 500) { // Wait 500ms for feed
+                if (System.currentTimeMillis() - shootTimer > 200) { // Wait 500ms for feed
                     shooter.retractFeeder();
                     shootingState = ShootingState.SHOOTING_ACTION;
                 }
@@ -453,7 +453,7 @@ public class Spindexer {
                 break;
 
             case COOLDOWN:
-                if (System.currentTimeMillis() - shootTimer > 300) { // Wait 300ms before moving
+                if (System.currentTimeMillis() - shootTimer > 100) { // Wait 300ms before moving
                     shootingState = ShootingState.SEARCHING;
                 }
                 break;

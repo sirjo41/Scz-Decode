@@ -38,8 +38,8 @@ public class Blue extends OpMode {
     private static final String SHOOTER_MOTOR = "shooter";
 
     // Poses - Extracted from User's Path Data
-    private final Pose startPose = new Pose(19, 119, Math.toRadians(54)); // Start from Path1
-    private final Pose shootPose = new Pose(44, 104.000, Math.toRadians(134));
+    private final Pose startPose = new Pose(19, 119, Math.toRadians(144)); // Start from Path1
+    private final Pose shootPose = new Pose(44, 104.000, Math.toRadians(144));
     private final Pose intake1Pose = new Pose(44, 84, Math.toRadians(180));
     private final Pose feed1Pose = new Pose(22, 84, Math.toRadians(180));
     private final Pose intake2Pose = new Pose(44, 60, Math.toRadians(180));
@@ -55,17 +55,18 @@ public class Blue extends OpMode {
         // Path1: Start -> Shoot 1
         toShoot1 = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, shootPose))
-                .setLinearHeadingInterpolation(Math.toRadians(54), Math.toRadians(136))
+                .setLinearHeadingInterpolation(Math.toRadians(144), Math.toRadians(144))
                 .build();
 
         // Path2: Shoot 1 -> Intake 1
         intake1 = follower.pathBuilder()
                 .addPath(new BezierLine(shootPose, intake1Pose))
-                .setLinearHeadingInterpolation(Math.toRadians(136), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(144), Math.toRadians(180))
                 .build();
 
         // Path3: Intake 1 -> Feed 1
         feed1 = follower.pathBuilder()
+                .setBrakingStart(1)
                 .addPath(new BezierLine(intake1Pose, feed1Pose))
                 .setTangentHeadingInterpolation()
                 .build();
@@ -73,13 +74,13 @@ public class Blue extends OpMode {
         // Path4: Feed 1 -> Shoot 2
         toShoot2 = follower.pathBuilder()
                 .addPath(new BezierLine(feed1Pose, shootPose))
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(136))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(144))
                 .build();
 
         // Path5: Shoot 2 -> Intake 2
         intake2 = follower.pathBuilder()
                 .addPath(new BezierLine(shootPose, intake2Pose))
-                .setLinearHeadingInterpolation(Math.toRadians(136), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(144), Math.toRadians(180))
                 .build();
 
         // Path6: Intake 2 -> Feed 2
@@ -91,7 +92,7 @@ public class Blue extends OpMode {
         // Path7: Feed 2 -> Shoot 3
         toShoot3 = follower.pathBuilder()
                 .addPath(new BezierLine(feed2Pose, shootPose))
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(136))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(144))
                 .build();
     }
 
