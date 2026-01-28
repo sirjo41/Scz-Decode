@@ -38,7 +38,7 @@ public class Blue extends OpMode {
     private static final String SHOOTER_MOTOR = "shooter";
 
     // Poses - Extracted from User's Path Data
-    private final Pose startPose = new Pose(21.234, 123.514, Math.toRadians(54)); // Start from Path1
+    private final Pose startPose = new Pose(19, 119, Math.toRadians(54)); // Start from Path1
     private final Pose shootPose = new Pose(44, 104.000, Math.toRadians(134));
     private final Pose intake1Pose = new Pose(44, 84, Math.toRadians(180));
     private final Pose feed1Pose = new Pose(22, 84, Math.toRadians(180));
