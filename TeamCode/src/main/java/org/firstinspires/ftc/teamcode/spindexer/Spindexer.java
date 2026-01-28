@@ -365,9 +365,6 @@ public class Spindexer {
      * Handles the sorting and shooting sequence.
      */
     public void updateAutoShoot() {
-        // Continuously maintain shooter speed during shooting mode
-        //shooter.spinUpShooter();
-
         switch (shootingState) {
             case SEARCHING:
                 if (ballsShotCount >= 3) {

@@ -30,11 +30,6 @@ public class Drive extends LinearOpMode {
     private static final String FEEDER_SERVO = "feeder";
     private static final String SHOOTER_MOTOR = "shooter";
 
-    // Edge Detection
-    private boolean lastDpUp = false;
-    private boolean lastDpDown = false;
-    private boolean lastY = false;
-
     @Override
     public void runOpMode() {
 
