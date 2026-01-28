@@ -94,7 +94,7 @@ public class Shooter {
      */
     public boolean isShooterReady() {
         double currentVelocity = getShooterRPM();
-        return (Math.abs(currentVelocity) >= TARGET_SHOOTER_RPM);
+        return (Math.abs(currentVelocity - TARGET_SHOOTER_RPM) < SHOOTER_VELOCITY_TOLERANCE);
     }
 
     /**

@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.auto.SpindexerAuto;
 import org.firstinspires.ftc.teamcode.spindexer.Spindexer;
 
 import java.util.List;
@@ -63,10 +64,10 @@ public class LimelightControl {
      * - ID 21 -> GREEN_FIRST
      * - ID 22 -> GREEN_SECOND
      * - ID 23 -> GREEN_THIRD
-     * 
+     *
      * @return Resolved GamePattern or null if no valid tag found
      */
-    public Spindexer.GamePattern getGamePatternFromTags() {
+    public SpindexerAuto.GamePattern getGamePatternFromTags() {
         LLResult result = getLatestResult();
         if (result == null || !result.isValid()) {
             return null;

@@ -16,7 +16,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.teamcode.limelight.LimelightControl;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.spindexer.Shooter;
-import org.firstinspires.ftc.teamcode.spindexer.Spindexer;
 
 @Autonomous(name = "Blue", group = "Blue", preselectTeleOp = "Drive")
 public class Blue extends OpMode {
@@ -25,13 +24,15 @@ public class Blue extends OpMode {
     private Timer pathTimer, opmodeTimer;
     private int pathState;
 
+
     // Subsystems
-    private Spindexer spindexer;
+    private Shooter shooter;
+    private SpindexerAuto spindexerauto;
     private LimelightControl limelight;
     private DcMotor intake;
 
     // Hardware Names
-    private static final String SPINDEXER_MOTOR = "spindexer";
+    private static final String spindexerauto_MOTOR = "spindexerauto";
     private static final String COLOR_SENSOR = "intakeColor";
     private static final String INTAKE_MOTOR = "intake";
     private static final String FEEDER_SERVO = "feeder";
@@ -49,7 +50,7 @@ public class Blue extends OpMode {
     private PathChain toShoot1, intake1, feed1, toShoot2, intake2, feed2, toShoot3;
 
     // Pattern
-    private Spindexer.GamePattern detectedPattern = Spindexer.GamePattern.GREEN_FIRST; // Default
+    private  SpindexerAuto.GamePattern detectedPattern = SpindexerAuto.GamePattern.GREEN_FIRST; // Default
 
     public void buildPaths() {
         // Path1: Start -> Shoot 1
@@ -99,114 +100,34 @@ public class Blue extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0: // Start -> Shoot 1
-                follower.followPath(toShoot1);
-                setPathState(1);
-                break;
-
-            case 1: // Moving to Shoot 1
                 if (!follower.isBusy()) {
-                    /* Start Shooting Sequence */
-                    spindexer.setMode(Spindexer.SpindexerMode.SHOOTING);
-                    spindexer.spinUpShooter(); // Ensure shooter is spinning
-                    setPathState(2);
+                    pathState = 1;
+                    follower.followPath(intake1);
                 }
                 break;
-
-            case 2: // Shooting 1 (3 balls)
-                // Spindexer handles logic. Wait until it switches back to INTAKING
-                spindexer.updateAutoShoot(); // Critical: Drive the state machine!
-
-                // Keep spinning up shooter
-                spindexer.spinUpShooter();
-
-                if (spindexer.getMode() == Spindexer.SpindexerMode.INTAKING) {
-                    // Done shooting
-                    spindexer.stopShooter();
-
-                    // Start next path: Intake 1
-                    follower.followPath(intake1, true); // Hold end?
-                    intake.setPower(1.0); // Start intake
-                    setPathState(3);
-                }
-                break;
-
-            case 3: // Moving to Intake 1
+            case 1: // Intake 1 -> Feed 1
                 if (!follower.isBusy()) {
-                    /* At Intake 1 */
-                    // Move to Feed 1
-                    follower.setMaxPower(0.5);
-                    follower.followPath(feed1, true);
-                    setPathState(4);
+                    pathState = 2;
+                    follower.followPath(toShoot2);
                 }
                 break;
-
-            case 4: // Moving to Feed 1
-                // We keep intake running
+            case 2: // Shoot 2 -> Intake 2
                 if (!follower.isBusy()) {
-                    /* At Feed 1 */
-                    // Prepare to go back to shoot
-                    //intake.setPower(0); // Stop intake
-                    // Move to Shoot 2
-                    follower.setMaxPower(1);
-                    follower.followPath(toShoot2, true);
-                    setPathState(5);
+                    pathState = 3;
+                    follower.followPath(intake2);
                 }
                 break;
-
-            case 5: // Moving to Shoot 2
+            case 3: // Intake 2 -> Feed 2
                 if (!follower.isBusy()) {
-                    /* Start Shooting Sequence 2 */
-                    spindexer.setMode(Spindexer.SpindexerMode.SHOOTING);
-                    spindexer.spinUpShooter();
-                    setPathState(6);
+                    pathState = 4;
+                    follower.followPath(toShoot3);
                 }
                 break;
-
-            case 6: // Shooting 2
-                spindexer.updateAutoShoot();
-                spindexer.spinUpShooter();
-                if (spindexer.getMode() == Spindexer.SpindexerMode.INTAKING) {
-                    spindexer.stopShooter();
-
-                    // Start next cycle: Intake 2
-                    follower.followPath(intake2, true);
-                    intake.setPower(1.0);
-                    setPathState(7);
-                }
-                break;
-
-            case 7: // Moving to Intake 2
-                if (!follower.isBusy()) {
-                    follower.followPath(feed2, true);
-                    setPathState(8);
-                }
-                break;
-
-            case 8: // Moving to Feed 2
-                if (!follower.isBusy()) {
-                    //intake.setPower(0);
-                    follower.followPath(toShoot3, true);
-                    setPathState(9);
-                }
-                break;
-
-            case 9: // Moving to Shoot 3
-                if (!follower.isBusy()) {
-                    /* Start Shooting Sequence 3 */
-                    spindexer.setMode(Spindexer.SpindexerMode.SHOOTING);
-                    spindexer.spinUpShooter();
-                    setPathState(10);
-                }
-                break;
-
-            case 10: // Shooting 3
-                spindexer.updateAutoShoot();
-                spindexer.spinUpShooter();
-                if (spindexer.getMode() == Spindexer.SpindexerMode.INTAKING) {
-                    spindexer.stopShooter();
-
-                    // No Park path defined in user request, so we finish here
-                    setPathState(-1);
+            case 4: // Shoot 3 done
+                if (!follower.isBusy() && spindexerauto.getMode() == SpindexerAuto.SpindexerMode.INTAKING) {
+                    // Optionally stop intake
+                    intake.setPower(0);
+                    pathState = -1; // finished
                 }
                 break;
         }
@@ -220,17 +141,23 @@ public class Blue extends OpMode {
     @Override
     public void loop() {
         follower.update();
-        spindexer.updateIntake(); // Keep tracking slots during intake phases
-        spindexer.updateShooter(); // Maintain shooter velocity
+        if (spindexerauto.getMode() == SpindexerAuto.SpindexerMode.INTAKING) {
+            spindexerauto.updateIntake();
+        }
+        // Keep tracking slots during intake phases
+        shooter.updateShooter(); // Maintain shooter velocity
 
         autonomousPathUpdate();
 
-        telemetry.addData("Path State", pathState);
-        telemetry.addData("X", follower.getPose().getX());
-        telemetry.addData("Y", follower.getPose().getY());
-        telemetry.addData("Heading", follower.getPose().getHeading());
-        telemetry.addData("Pattern", detectedPattern);
-        telemetry.update();
+        telemetry.addLine("----- spindexerauto -----");
+        telemetry.addData("Mode", spindexerauto.getMode());
+        telemetry.addData("Balls Shot", spindexerauto.getBallsShotCount());
+        telemetry.addLine("----- SLOTS -----");
+        telemetry.addData("Slot 0", spindexerauto.getSlotColor(0));
+        telemetry.addData("Slot 1", spindexerauto.getSlotColor(1));
+        telemetry.addData("Slot 2", spindexerauto.getSlotColor(2));
+
+
     }
 
     @Override
@@ -245,16 +172,14 @@ public class Blue extends OpMode {
         buildPaths();
 
         // Initialize Subsystems
-        DcMotorEx spinMotor = hardwareMap.get(DcMotorEx.class, SPINDEXER_MOTOR);
+        DcMotorEx spinMotor = hardwareMap.get(DcMotorEx.class, spindexerauto_MOTOR);
         NormalizedColorSensor intakeSensor = hardwareMap.get(NormalizedColorSensor.class, COLOR_SENSOR);
         Servo feederServo = hardwareMap.get(Servo.class, FEEDER_SERVO);
         DcMotorEx shooterMotor = hardwareMap.get(DcMotorEx.class, SHOOTER_MOTOR);
         shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        Shooter shooter = new Shooter(shooterMotor, feederServo);
-        spindexer = new Spindexer(this, spinMotor, intakeSensor, shooter);
-        spindexer.setSemiAutoMode(false); // Enable fully auto shooting
-
+        shooter = new Shooter(shooterMotor, feederServo);
+        spindexerauto = new SpindexerAuto(this, spinMotor, intakeSensor, shooter);
         intake = hardwareMap.get(DcMotor.class, INTAKE_MOTOR);
 
         // Limelight
@@ -264,7 +189,7 @@ public class Blue extends OpMode {
     @Override
     public void init_loop() {
         // Continuously check for pattern
-        Spindexer.GamePattern livePattern = limelight.getGamePatternFromTags();
+        SpindexerAuto.GamePattern livePattern = limelight.getGamePatternFromTags();
         if (livePattern != null) {
             detectedPattern = livePattern;
             telemetry.addData("DETECTED PATTERN", detectedPattern);
@@ -279,15 +204,15 @@ public class Blue extends OpMode {
     public void start() {
         opmodeTimer.resetTimer();
         // Lock in pattern
-        spindexer.setGamePattern(detectedPattern);
+        spindexerauto.setGamePattern(detectedPattern);
         limelight.stop();
         intake.setPower(1.0);
-        spindexer.scanSlots(); // Scan for pre-loaded balls
+        spindexerauto.scanSlots(); // Scan for pre-loaded balls
         setPathState(0);
     }
 
     @Override
     public void stop() {
-        spindexer.stopShooter();
+        shooter.stopShooter();
     }
 }
