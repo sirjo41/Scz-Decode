@@ -16,7 +16,7 @@ public class Shooter {
 
     // Shooter constants
     public static final double TARGET_SHOOTER_RPM = 1200; // TODO: Tune target shooter velocity
-    private static final double SHOOTER_VELOCITY_TOLERANCE = 200; // RPM tolerance for "ready" state
+    private static final double SHOOTER_VELOCITY_TOLERANCE = 100; // RPM tolerance for "ready" state
 
     // Shooter PID coefficients
     public static final double SHOOTER_P = 2.4; // Tune: Start with 10% of F

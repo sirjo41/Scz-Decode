@@ -37,7 +37,7 @@ public class Spindexer {
 
     // Motor control parameters
     private static final int TARGET_TOL = 1;
-    private static final double MAX_POWER = 1;
+    private static final double MAX_POWER = 0.8;
 
     /**
      * Game pattern enumeration.
@@ -368,7 +368,7 @@ public class Spindexer {
      */
     public void updateAutoShoot() {
         // Continuously maintain shooter speed during shooting mode
-        shooter.spinUpShooter();
+        //shooter.spinUpShooter();
 
         switch (shootingState) {
             case SEARCHING:

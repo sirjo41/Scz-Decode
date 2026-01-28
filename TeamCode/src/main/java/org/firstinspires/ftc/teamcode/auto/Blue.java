@@ -39,11 +39,11 @@ public class Blue extends OpMode {
 
     // Poses - Extracted from User's Path Data
     private final Pose startPose = new Pose(21.234, 123.514, Math.toRadians(54)); // Start from Path1
-    private final Pose shootPose = new Pose(42.000, 102.000, Math.toRadians(136));
-    private final Pose intake1Pose = new Pose(42.000, 83.000, Math.toRadians(180));
-    private final Pose feed1Pose = new Pose(23.000, 83.000, Math.toRadians(180));
-    private final Pose intake2Pose = new Pose(42.000, 60.000, Math.toRadians(180));
-    private final Pose feed2Pose = new Pose(23.000, 60.000, Math.toRadians(180));
+    private final Pose shootPose = new Pose(44, 104.000, Math.toRadians(134));
+    private final Pose intake1Pose = new Pose(44, 84, Math.toRadians(180));
+    private final Pose feed1Pose = new Pose(22, 84, Math.toRadians(180));
+    private final Pose intake2Pose = new Pose(44, 60, Math.toRadians(180));
+    private final Pose feed2Pose = new Pose(22, 60.000, Math.toRadians(180));
 
     // Paths
     private PathChain toShoot1, intake1, feed1, toShoot2, intake2, feed2, toShoot3;
@@ -133,6 +133,7 @@ public class Blue extends OpMode {
                 if (!follower.isBusy()) {
                     /* At Intake 1 */
                     // Move to Feed 1
+                    follower.setMaxPower(0.5);
                     follower.followPath(feed1, true);
                     setPathState(4);
                 }
@@ -143,8 +144,9 @@ public class Blue extends OpMode {
                 if (!follower.isBusy()) {
                     /* At Feed 1 */
                     // Prepare to go back to shoot
-                    intake.setPower(0); // Stop intake
+                    //intake.setPower(0); // Stop intake
                     // Move to Shoot 2
+                    follower.setMaxPower(1);
                     follower.followPath(toShoot2, true);
                     setPathState(5);
                 }
@@ -181,7 +183,7 @@ public class Blue extends OpMode {
 
             case 8: // Moving to Feed 2
                 if (!follower.isBusy()) {
-                    intake.setPower(0);
+                    //intake.setPower(0);
                     follower.followPath(toShoot3, true);
                     setPathState(9);
                 }
@@ -278,6 +280,7 @@ public class Blue extends OpMode {
         // Lock in pattern
         spindexer.setGamePattern(detectedPattern);
         limelight.stop();
+        intake.setPower(1.0);
         spindexer.scanSlots(); // Scan for pre-loaded balls
         setPathState(0);
     }
