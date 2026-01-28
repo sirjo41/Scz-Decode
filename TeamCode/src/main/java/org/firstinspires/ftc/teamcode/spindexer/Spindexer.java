@@ -303,9 +303,9 @@ public class Spindexer {
         NormalizedRGBA colors = intakeSensor.getNormalizedColors();
         if (colors.green < 0.0030 && colors.blue < 0.0030) {
             return SlotColor.EMPTY;
-        } else if (colors.green > colors.blue) {
+        } else if ( (colors.green > 500 )&&(colors.green > colors.blue)) {
             return SlotColor.GREEN;
-        } else if (colors.blue > colors.green) { // colors.red > colors.green &&
+        } else if ((colors.blue>500)&&(colors.blue > colors.green)) { // colors.red > colors.green &&
             return SlotColor.PURPLE;
         } else {
             return SlotColor.EMPTY;

@@ -100,12 +100,13 @@ public class Drive extends LinearOpMode {
             // A: Intake (Run Intake)
             if (gamepad1.a) {
                 intake.setPower(1.0);
-                spindexer.updateIntake();
             } else {
                 intake.setPower(0.0);
             }
             // Update shooter to maintain velocity
             shooter.updateShooter();
+
+            spindexer.updateIntake();
 
             // BACK Button: Emergency Stop Spindexer
             if (gamepad1.back) {

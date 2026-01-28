@@ -13,12 +13,15 @@ public class ColorTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         NormalizedColorSensor intakeSensor = hardwareMap.get(NormalizedColorSensor.class, "intakeColor");
         intakeSensor.setGain(2);
+        telemetry.addLine("sdjfsdfsdfjsd");
+        telemetry.update();
         waitForStart();
         while (opModeIsActive()){
             NormalizedRGBA colors = intakeSensor.getNormalizedColors();
             telemetry.addData("Green",colors.green);
             telemetry.addData("Red",colors.red);
             telemetry.addData("Blue",colors.blue);
+            telemetry.update();
 
         }
     }
