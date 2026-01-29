@@ -184,9 +184,9 @@ public class SpindexerAuto {
         currentSlotIndex = (currentSlotIndex + slotsToMove + 3) % 3;
     }
 
-    private void moveHalfSlotLeft() {
+    private void moveHalfSlotRight() {
         shooter.retractFeeder();
-        accum -= TICKS_PER_SLOT / 2.0;
+        accum += TICKS_PER_SLOT / 2.0;
         targetCounts = (int)Math.rint(zeroCount + accum);
         motor.setTargetPosition(targetCounts);
         motor.setPower(MAX_POWER);
@@ -223,7 +223,7 @@ public class SpindexerAuto {
 
     private void exitShooting() {
         shooter.stopShooter();
-        moveHalfSlotLeft();
+        moveHalfSlotRight();
         Arrays.fill(slots, SlotColor.EMPTY);
         ballsShotThisCycle = 0;
         mode = SpindexerMode.INTAKING;
