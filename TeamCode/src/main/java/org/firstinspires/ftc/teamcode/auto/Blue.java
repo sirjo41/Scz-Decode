@@ -95,14 +95,16 @@ public class Blue extends OpMode {
         switch (pathState) {
             case 0:
                 follower.followPath(toShoot1);// Start -> Shoot 1
-                setPathState(1);
-                break;
-            case 1:
-                if (!follower.isBusy() ) {
-                    spindexerauto.setModeShooting();
+                if (!follower.isBusy()) {
+                    spindexerauto.setModeShooting(); // start shooting
+                    setPathState(1);
                 }
+                break;
+
+            case 1: // Shooting 1
+                // Wait for SpindexerAuto to finish shooting
                 if (spindexerauto.getMode() == SpindexerAuto.SpindexerMode.INTAKING) {
-                    spindexerauto.stopShooter();
+                    // Shooting finished, move to Intake 1
                     intake.setPower(1.0);
                     follower.followPath(intake1, true);
                     setPathState(2);
@@ -110,60 +112,65 @@ public class Blue extends OpMode {
                 break;
 
             case 2: // Intake 1 -> Feed 1
-                if (!follower.isBusy() ) {
-                    follower.setMaxPower(0.5);
+                if (!follower.isBusy()) {
+                    follower.setMaxPower(0.2);
                     follower.followPath(feed1, true);
                     setPathState(3);
                 }
                 break;
 
-            case 3:
-                follower.setMaxPower(1);
-                follower.followPath(toShoot2, true);// Feed 1 -> Shoot 2
-                setPathState(4);
+            case 3: // Feed 1 -> Shoot 2
+                if (!follower.isBusy()) {
+                    follower.setMaxPower(1);
+                    follower.followPath(toShoot2, true);
+                    setPathState(4);
+                }
                 break;
 
-            case 4:
-                if (!follower.isBusy() ) {
-                    follower.setMaxPower(1);
-                    spindexerauto.setModeShooting();
-                    setPathState(4);
-                } // Shooting 2
+            case 4: // Shooting 2
+                if (!follower.isBusy() && spindexerauto.getMode() != SpindexerAuto.SpindexerMode.SHOOTING) {
+                    spindexerauto.setModeShooting(); // start shooting
+                }
+
+                // Wait for shooting to finish
                 if (spindexerauto.getMode() == SpindexerAuto.SpindexerMode.INTAKING) {
-                    spindexerauto.stopShooter();
-                    follower.followPath(intake2, true);
+                    // Shooting finished, move to Intake 2
                     intake.setPower(1.0);
+                    follower.followPath(intake2, true);
                     setPathState(5);
                 }
                 break;
 
             case 5: // Intake 2 -> Feed 2
-                if (!follower.isBusy() ) {
-                    follower.setMaxPower(0.5);
+                if (!follower.isBusy()) {
+                    follower.setMaxPower(0.2);
                     follower.followPath(feed2, true);
                     setPathState(6);
                 }
                 break;
 
-            case 6:
-                follower.setMaxPower(1);
-                follower.followPath(toShoot3, true);// Feed 2 -> Shoot 3
-                setPathState(7);
-                break;
-
-            case 7:
-                if (!follower.isBusy() ) {
-                    spindexerauto.setModeShooting();
-                }// Shooting 3
-                if (spindexerauto.getMode() == SpindexerAuto.SpindexerMode.INTAKING) {
-                    spindexerauto.stopShooter();
-                    setPathState(8);
+            case 6: // Feed 2 -> Shoot 3
+                if (!follower.isBusy()) {
+                    follower.setMaxPower(1);
+                    follower.followPath(toShoot3, true);
+                    setPathState(7);
                 }
                 break;
 
-            case 8: // Park / End
-                if (!follower.isBusy() ) {
-                    setPathState(-1);
+            case 7: // Shooting 3
+                if (!follower.isBusy() && spindexerauto.getMode() != SpindexerAuto.SpindexerMode.SHOOTING) {
+                    spindexerauto.setModeShooting(); // start shooting
+                }
+
+                // Wait for shooting to finish
+                if (spindexerauto.getMode() == SpindexerAuto.SpindexerMode.INTAKING) {
+                    setPathState(8); // finished all cycles
+                }
+                break;
+
+            case 8: // End / Park
+                if (!follower.isBusy()) {
+                    setPathState(-1); // finished autonomous
                 }
                 break;
         }
@@ -233,7 +240,7 @@ public class Blue extends OpMode {
         spindexerauto.setGamePattern(detectedPattern);
         limelight.stop();
         intake.setPower(1.0);
-        //spindexerauto.scanSlots();
+        spindexerauto.scanSlots();
         setPathState(0);
     }
 

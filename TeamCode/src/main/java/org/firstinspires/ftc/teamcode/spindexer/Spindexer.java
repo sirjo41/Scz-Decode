@@ -327,7 +327,7 @@ public class Spindexer {
      */
     public void updateIntake() {
         if (mode == SpindexerMode.SHOOTING) {
-            updateAutoShoot();
+            //updateAutoShoot();
             return;
         }
 
@@ -473,15 +473,16 @@ public class Spindexer {
 
     public void forceShootAndMoveRight() {
         if (forceShotState != ForceShotState.IDLE) return;
-
+        slots[currentSlotIndex] = SlotColor.EMPTY;
         shooter.feed();
         forceShotTimer = System.currentTimeMillis();
         forceShotState = ForceShotState.FEEDING;
+
     }
     public void updateForceShot() {
         switch (forceShotState) {
             case FEEDING:
-                if (System.currentTimeMillis() - forceShotTimer > 200) {
+                if (System.currentTimeMillis() - forceShotTimer > 100) {
                     shooter.retractFeeder();
                     forceShotTimer = System.currentTimeMillis();
                     forceShotState = ForceShotState.RETRACTING;
@@ -489,7 +490,7 @@ public class Spindexer {
                 break;
 
             case RETRACTING:
-                if (System.currentTimeMillis() - forceShotTimer > 100) {
+                if (System.currentTimeMillis() - forceShotTimer > 300) {
                     moveRight(); // ALWAYS move right
                     forceShotState = ForceShotState.MOVING;
                 }

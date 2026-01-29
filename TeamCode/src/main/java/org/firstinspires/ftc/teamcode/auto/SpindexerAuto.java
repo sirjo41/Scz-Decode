@@ -245,15 +245,8 @@ public class SpindexerAuto {
 
     /* ================= INIT SCAN ================= */
     public void scanSlots() {
-        for (int i = 0; i < 3; i++) {
-            long start = System.currentTimeMillis();
-            while (System.currentTimeMillis() - start < 200) {
-                SlotColor c = detectColor();
-                if (c != SlotColor.EMPTY) slots[currentSlotIndex] = c;
-            }
-            moveSlots(1);
-            long timeout = System.currentTimeMillis();
-            while (motor.isBusy() && System.currentTimeMillis() - timeout < 500) {}
-        }
+        slots[0]= SlotColor.GREEN;
+        slots[1]= SlotColor.PURPLE;
+        slots[2]= SlotColor.PURPLE;
     }
 }
