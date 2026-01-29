@@ -58,7 +58,7 @@ public class Blue extends OpMode {
 
     public void buildPaths() {
         toShoot1 = follower.pathBuilder()
-                .setBrakingStart(0.5)
+                .setBrakingStart(0.8)
                 .addPath(new BezierLine(startPose, shootPose))
                 .setLinearHeadingInterpolation(Math.toRadians(144), Math.toRadians(144))
                 .build();
