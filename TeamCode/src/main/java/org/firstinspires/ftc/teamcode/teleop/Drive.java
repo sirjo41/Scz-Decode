@@ -148,7 +148,7 @@ public class Drive extends LinearOpMode {
                 spindexer.stopShooter();
             }
 
-            if (gamepadEx.wasJustPressed(GamepadKeys.Button.Y)) {
+            if (gamepadEx.wasJustPressed(GamepadKeys.Button.Y )&& (spindexer.getMode() == Spindexer.SpindexerMode.SHOOTING)) {
                 spindexer.forceShootAndMoveRight();
             }
 
