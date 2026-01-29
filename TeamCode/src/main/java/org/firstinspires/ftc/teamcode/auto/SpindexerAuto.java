@@ -117,13 +117,13 @@ public class SpindexerAuto {
 
         if (objectDetected && !lastObjectDetected) {
             if (!isFull()) moveSlots(1);
-            else {
-                mode = SpindexerMode.SHOOTING;
-                shooter.spinUpShooter();
-                shootingState = ShootingState.SEARCHING;
-                moveHalfSlotRight(); // mechanical alignment
-                searchTimeoutStart = System.currentTimeMillis();
-            }
+//            else {
+//                mode = SpindexerMode.SHOOTING;
+//                shooter.spinUpShooter();
+//                shootingState = ShootingState.SEARCHING;
+//                moveHalfSlotRight(); // mechanical alignment
+//                searchTimeoutStart = System.currentTimeMillis();
+//            }
         }
 
         lastObjectDetected = objectDetected;
