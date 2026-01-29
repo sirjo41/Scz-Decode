@@ -117,7 +117,7 @@ public class SpindexerAuto {
             if (!isFull()) {
                 moveSlots(1);
             } else {
-                setModeShooting();
+               // setModeShooting();
             }
         }
     }
