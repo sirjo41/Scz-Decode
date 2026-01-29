@@ -190,7 +190,7 @@ public class SpindexerAuto {
         targetCounts = (int)Math.rint(zeroCount + accum);
         motor.setTargetPosition(targetCounts);
         motor.setPower(MAX_POWER);
-        // Half move does NOT change currentSlotIndex
+        currentSlotIndex = 0;
     }
 
     /* ================= HELPERS ================= */
