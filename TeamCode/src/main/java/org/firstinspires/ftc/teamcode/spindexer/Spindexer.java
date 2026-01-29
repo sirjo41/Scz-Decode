@@ -482,7 +482,7 @@ public class Spindexer {
     public void updateForceShot() {
         switch (forceShotState) {
             case FEEDING:
-                if (System.currentTimeMillis() - forceShotTimer > 100) {
+                if (System.currentTimeMillis() - forceShotTimer > 300) {
                     shooter.retractFeeder();
                     forceShotTimer = System.currentTimeMillis();
                     forceShotState = ForceShotState.RETRACTING;
@@ -490,7 +490,7 @@ public class Spindexer {
                 break;
 
             case RETRACTING:
-                if (System.currentTimeMillis() - forceShotTimer > 300) {
+                if (System.currentTimeMillis() - forceShotTimer > 500) {
                     moveRight(); // ALWAYS move right
                     forceShotState = ForceShotState.MOVING;
                 }
