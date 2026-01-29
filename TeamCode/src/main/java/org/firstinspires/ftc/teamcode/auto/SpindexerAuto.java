@@ -94,7 +94,7 @@ public class SpindexerAuto {
         mode = SpindexerMode.SHOOTING;
         shooter.spinUpShooter();
         shootingState = ShootingState.SEARCHING;
-        moveHalfSlotLeft(); // Mechanical alignment
+        moveHalfSlotRight(); // Mechanical alignment
         // Do NOT adjust currentSlotIndex here
     }
 
