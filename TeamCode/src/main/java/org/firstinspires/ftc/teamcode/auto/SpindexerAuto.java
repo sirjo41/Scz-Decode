@@ -22,7 +22,7 @@ public class SpindexerAuto {
     public static final double TICKS_PER_SLOT = 473;
     private static final int TARGET_TOL = 1;
     private static final double MAX_POWER = 0.8;
-    public static final PIDFCoefficients POS_PIDF = new PIDFCoefficients(0.2, 0.001, 0.05, 0.0032);
+    public static final PIDFCoefficients POS_PIDF = new PIDFCoefficients(0.9, 0.001, 0.05, 0.12);
 
     /* ================= ENUMS ================= */
     public enum GamePattern { GREEN_FIRST, GREEN_SECOND, GREEN_THIRD }
