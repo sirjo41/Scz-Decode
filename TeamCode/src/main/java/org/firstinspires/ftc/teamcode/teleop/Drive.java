@@ -7,7 +7,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -29,6 +28,10 @@ public class Drive extends LinearOpMode {
     private static final String INTAKE_MOTOR = "intake";
     private static final String FEEDER_SERVO = "feeder";
     private static final String SHOOTER_MOTOR = "shooter";
+
+    // Edge Detection
+    private boolean lastDpUp = false;
+    private boolean lastDpDown = false;
 
     @Override
     public void runOpMode() {
@@ -72,6 +75,7 @@ public class Drive extends LinearOpMode {
 
         while (opModeIsActive()) {
 
+            gamepadEx.readButtons();
             // === 1. Drive Control (Gamepad 1) ===
             double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
             double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
@@ -127,7 +131,6 @@ public class Drive extends LinearOpMode {
                 spindexer.moveRight();
             }
 
-
             // DPad Up: Manual Pattern Cycle Override
             if (gamepadEx.wasJustPressed(GamepadKeys.Button.DPAD_UP)) {
                 Spindexer.GamePattern current = spindexer.getGamePattern();
@@ -146,9 +149,12 @@ public class Drive extends LinearOpMode {
             }
 
             if (gamepadEx.wasJustPressed(GamepadKeys.Button.Y)) {
-                spindexer.shoot();
+                spindexer.forceShootAndMoveRight();
             }
 
+//            if(gamepadEx.wasJustPressed(GamepadKeys.Button.X)){
+//                spindexer.requestShoot();
+//            }
             // === 4. Telemetry ===
             telemetry.addLine("--- Spindexer State ---");
             telemetry.addData("Mode", spindexer.getMode());

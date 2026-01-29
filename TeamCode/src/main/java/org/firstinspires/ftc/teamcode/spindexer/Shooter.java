@@ -15,8 +15,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class Shooter {
 
     // Shooter constants
-    public static final double TARGET_SHOOTER_RPM = 1500; // TODO: Tune target shooter velocity
-    private static final double SHOOTER_VELOCITY_TOLERANCE = 100; // RPM tolerance for "ready" state
+    public static double TARGET_SHOOTER_RPM = 1500; // TODO: Tune target shooter velocity
 
     // Shooter PID coefficients
     public static final double SHOOTER_P = 55; // Tune: Start with 10% of F
@@ -94,6 +93,8 @@ public class Shooter {
      */
     public boolean isShooterReady() {
         double currentVelocity = getShooterRPM();
+        // RPM tolerance for "ready" state
+        double SHOOTER_VELOCITY_TOLERANCE = 100;
         return (Math.abs(currentVelocity - TARGET_SHOOTER_RPM) < SHOOTER_VELOCITY_TOLERANCE);
     }
 

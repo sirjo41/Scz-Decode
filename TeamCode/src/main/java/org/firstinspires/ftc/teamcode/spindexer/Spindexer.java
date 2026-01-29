@@ -96,6 +96,16 @@ public class Spindexer {
         SHOOTING_ACTION,
         COOLDOWN
     }
+    public enum ForceShotState {
+        IDLE,
+        FEEDING,
+        RETRACTING,
+        MOVING
+    }
+
+    private ForceShotState forceShotState = ForceShotState.IDLE;
+    private long forceShotTimer = 0;
+
 
     private ShootingState shootingState = ShootingState.SEARCHING;
     private long shootTimer = 0;
@@ -347,15 +357,16 @@ public class Spindexer {
             if (!isFull()) {
                 moveRight();
                 // Note: moveRight updates currentSlotIndex automatically now.
-            } else {
-                // Full? Switch to shooting?
-                mode = SpindexerMode.SHOOTING;
-                moveRightHalf();
-                // After half-move right from intake, the shooting position is one slot back
-                // If we were at slot 2 (just detected ball), shooting is now at slot 1
-                currentSlotIndex = (currentSlotIndex - 1 + slots.length) % slots.length;
-                shootingState = ShootingState.SEARCHING;
             }
+//            else {
+//                // Full? Switch to shooting?
+//                mode = SpindexerMode.SHOOTING;
+//                moveRightHalf();
+//                // After half-move right from intake, the shooting position is one slot back
+//                // If we were at slot 2 (just detected ball), shooting is now at slot 1
+//                currentSlotIndex = (currentSlotIndex - 1 + slots.length) % slots.length;
+//                shootingState = ShootingState.SEARCHING;
+//            }
         }
 
         lastColorDetected = objectCurrentlyDetected;
@@ -364,7 +375,12 @@ public class Spindexer {
     /**
      * Handles the sorting and shooting sequence.
      */
+
+
     public void updateAutoShoot() {
+        // Continuously maintain shooter speed during shooting mode
+        //shooter.spinUpShooter();
+
         switch (shootingState) {
             case SEARCHING:
                 if (ballsShotCount >= 3) {
@@ -389,7 +405,7 @@ public class Spindexer {
                 }
                 if (relIndex == -1) {
                     // No balls left?
-                   // ballsShotCount = 3; // Force exit
+                    ballsShotCount = 3; // Force exit
                     return;
                 }
 
@@ -450,6 +466,38 @@ public class Spindexer {
             case COOLDOWN:
                 if (System.currentTimeMillis() - shootTimer > 100) { // Wait 300ms before moving
                     shootingState = ShootingState.SEARCHING;
+                }
+                break;
+        }
+    }
+
+    public void forceShootAndMoveRight() {
+        if (forceShotState != ForceShotState.IDLE) return;
+
+        shooter.feed();
+        forceShotTimer = System.currentTimeMillis();
+        forceShotState = ForceShotState.FEEDING;
+    }
+    public void updateForceShot() {
+        switch (forceShotState) {
+            case FEEDING:
+                if (System.currentTimeMillis() - forceShotTimer > 200) {
+                    shooter.retractFeeder();
+                    forceShotTimer = System.currentTimeMillis();
+                    forceShotState = ForceShotState.RETRACTING;
+                }
+                break;
+
+            case RETRACTING:
+                if (System.currentTimeMillis() - forceShotTimer > 100) {
+                    moveRight(); // ALWAYS move right
+                    forceShotState = ForceShotState.MOVING;
+                }
+                break;
+
+            case MOVING:
+                if (!motor.isBusy()) {
+                    forceShotState = ForceShotState.IDLE;
                 }
                 break;
         }
@@ -548,9 +596,10 @@ public class Spindexer {
      * feeding.
      * Returns true if request accepted.
      */
-    public void shoot() {
-        // Only accept if in SHOOTING mode
-        if (mode == SpindexerMode.SHOOTING) {
+    public void requestShoot() {
+        if (mode == SpindexerMode.SHOOTING &&
+                shootingState == ShootingState.WAITING_FOR_TRIGGER &&
+                shooter.isShooterReady()) {
             shootRequested = true;
         }
     }
