@@ -114,8 +114,6 @@ public class Blue extends OpMode {
 
             case 2: // Shooting 1 (3 balls)
                 // Spindexer handles logic. Wait until it switches back to INTAKING
-                spindexerauto.updateAutoShoot(); // Critical: Drive the state machine!
-
                 // Keep spinning up shooter
                 spindexerauto.spinUpShooter();
 
@@ -162,7 +160,6 @@ public class Blue extends OpMode {
                 break;
 
             case 6: // Shooting 2
-                spindexerauto.updateAutoShoot();
                 spindexerauto.spinUpShooter();
                 if (spindexerauto.getMode() == SpindexerAuto.SpindexerMode.INTAKING) {
                     spindexerauto.stopShooter();
@@ -200,7 +197,6 @@ public class Blue extends OpMode {
                 break;
 
             case 10: // Shooting 3
-                spindexerauto.updateAutoShoot();
                 spindexerauto.spinUpShooter();
                 if (spindexerauto.getMode() == SpindexerAuto.SpindexerMode.INTAKING) {
                     spindexerauto.stopShooter();
@@ -224,11 +220,9 @@ public class Blue extends OpMode {
     @Override
     public void loop() {
         follower.update();
-        if (spindexerauto.getMode() == SpindexerAuto.SpindexerMode.INTAKING) {
-            spindexerauto.updateIntake();
-        }
-        // Keep tracking slots during intake phases
-        shooter.updateShooter(); // Maintain shooter velocity
+        spindexerauto.updateIntake();
+        spindexerauto.updateAutoShoot();
+        shooter.updateShooter();
 
         autonomousPathUpdate();
 
