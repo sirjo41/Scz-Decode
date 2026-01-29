@@ -116,7 +116,7 @@ public class Blue extends OpMode {
 
             case 2: // Intake 1 -> Feed 1
                 if (!follower.isBusy()) {
-                    follower.setMaxPower(0.2);
+                    follower.setMaxPower(0.8);
                     follower.followPath(feed1, true);
                     setPathState(3);
                 }
@@ -146,7 +146,7 @@ public class Blue extends OpMode {
 
             case 5: // Intake 2 -> Feed 2
                 if (!follower.isBusy()) {
-                    follower.setMaxPower(0.2);
+                    follower.setMaxPower(0.8);
                     follower.followPath(feed2, true);
                     setPathState(6);
                 }
