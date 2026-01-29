@@ -28,7 +28,14 @@ public class SpindexerAuto {
     public enum GamePattern { GREEN_FIRST, GREEN_SECOND, GREEN_THIRD }
     public enum SlotColor { EMPTY, PURPLE, GREEN }
     public enum SpindexerMode { INTAKING, SHOOTING }
-    private enum ShootingState { SEARCHING, MOVING, FEEDING, POST_SHOT_DELAY }
+    private enum ShootingState {
+        SEARCHING,
+        MOVING,
+        FEEDING,
+        RETRACTING,
+        POST_SHOT_DELAY
+    }
+
 
     /* ================= HARDWARE ================= */
     private final DcMotorEx motor;
@@ -154,17 +161,22 @@ public class SpindexerAuto {
                 break;
 
             case FEEDING:
-                if (System.currentTimeMillis() - stateTimer > 250) {
+                if (System.currentTimeMillis() - stateTimer > 300) {
                     shooter.retractFeeder();
+                    stateTimer = System.currentTimeMillis();
+                    shootingState = ShootingState.RETRACTING;
+                }
+                break;
+            case RETRACTING:
+                if (System.currentTimeMillis() - stateTimer > 500) {
                     slots[currentSlotIndex] = SlotColor.EMPTY;
                     ballsShotThisCycle++;
                     stateTimer = System.currentTimeMillis();
                     shootingState = ShootingState.POST_SHOT_DELAY;
                 }
                 break;
-
             case POST_SHOT_DELAY:
-                if (System.currentTimeMillis() - stateTimer > 150) {
+                if (System.currentTimeMillis() - stateTimer > 250) {
                     shootingState = ShootingState.SEARCHING;
                 }
                 break;
