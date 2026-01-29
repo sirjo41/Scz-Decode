@@ -134,7 +134,7 @@ public class Blue extends OpMode {
 
             case 4: // Shooting 2
                 if (!follower.isBusy() && !shootingRequested) {
-                    spindexerauto.setModeShooting();
+                    //spindexerauto.setModeShooting();
                     intake.setPower(0);
                     shootingRequested = true;
                 }
@@ -168,7 +168,7 @@ public class Blue extends OpMode {
 
             case 7: // Shooting 3
                 if (!follower.isBusy() && !shootingRequested) {
-                    spindexerauto.setModeShooting();
+                    //spindexerauto.setModeShooting();
                     intake.setPower(0);
                     shootingRequested = true;
                 }
