@@ -93,16 +93,14 @@ public class Blue extends OpMode {
 
     public void autonomousPathUpdate() {
         switch (pathState) {
-            case 0: // Start -> Shoot 1
+            case 0:
+                follower.followPath(toShoot1);// Start -> Shoot 1
+                setPathState(1);
+                break;
+            case 1:
                 if (!follower.isBusy() ) {
                     spindexerauto.setModeShooting();
-                    setPathState(1);
-                } else {
-                    follower.followPath(toShoot1);
                 }
-                break;
-
-            case 1: // Shooting 1
                 if (spindexerauto.getMode() == SpindexerAuto.SpindexerMode.INTAKING) {
                     spindexerauto.stopShooter();
                     intake.setPower(1.0);
@@ -119,17 +117,17 @@ public class Blue extends OpMode {
                 }
                 break;
 
-            case 3: // Feed 1 -> Shoot 2
+            case 3:
+                follower.setMaxPower(1);
+                follower.followPath(toShoot2, true);// Feed 1 -> Shoot 2
+                break;
+
+            case 4:
                 if (!follower.isBusy() ) {
                     follower.setMaxPower(1);
                     spindexerauto.setModeShooting();
                     setPathState(4);
-                } else {
-                    follower.followPath(toShoot2, true);
-                }
-                break;
-
-            case 4: // Shooting 2
+                } // Shooting 2
                 if (spindexerauto.getMode() == SpindexerAuto.SpindexerMode.INTAKING) {
                     spindexerauto.stopShooter();
                     follower.followPath(intake2, true);
@@ -146,17 +144,16 @@ public class Blue extends OpMode {
                 }
                 break;
 
-            case 6: // Feed 2 -> Shoot 3
-                if (!follower.isBusy() ) {
-                    follower.setMaxPower(1);
-                    spindexerauto.setModeShooting();
-                    setPathState(7);
-                } else {
-                    follower.followPath(toShoot3, true);
-                }
+            case 6:
+                follower.setMaxPower(1);
+                follower.followPath(toShoot3, true);// Feed 2 -> Shoot 3
+                setPathState(7);
                 break;
 
-            case 7: // Shooting 3
+            case 7:
+                if (!follower.isBusy() ) {
+                    spindexerauto.setModeShooting();
+                }// Shooting 3
                 if (spindexerauto.getMode() == SpindexerAuto.SpindexerMode.INTAKING) {
                     spindexerauto.stopShooter();
                     setPathState(8);
