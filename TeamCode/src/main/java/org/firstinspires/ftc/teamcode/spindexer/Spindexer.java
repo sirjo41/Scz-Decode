@@ -341,19 +341,9 @@ public class Spindexer {
         if (detectedColor != SlotColor.EMPTY) {
             slots[currentSlotIndex] = detectedColor;
         }
-
-        // Logic for "New Ball Arrival" in TeleOp
-        // If we are *supposed* to be catching new balls, and we see one:
-        // 1. Keep it.
-        // 2. Move to next slot.
-
-        // Rising edge check for MOVE Trigger
         boolean objectCurrentlyDetected = (detectedColor == SlotColor.PURPLE || detectedColor == SlotColor.GREEN);
 
         if (objectCurrentlyDetected && !lastColorDetected) {
-            // We found a NEW ball.
-            // Move to next slot to accept more.
-            // Check if we are physically capable of moving (busy check handled at top)
             if (!isFull()) {
                 moveRight();
                 // Note: moveRight updates currentSlotIndex automatically now.
