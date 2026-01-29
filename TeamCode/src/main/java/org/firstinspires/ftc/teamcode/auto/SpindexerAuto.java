@@ -94,7 +94,7 @@ public class SpindexerAuto {
         mode = SpindexerMode.SHOOTING;
         shooter.spinUpShooter();
         shootingState = ShootingState.SEARCHING;
-        moveHalfSlotRight(); // Mechanical alignment
+        moveHalfSlotLeft(); // Mechanical alignment
         // Do NOT adjust currentSlotIndex here
     }
 
@@ -132,8 +132,6 @@ public class SpindexerAuto {
 
                 int rel = findNextSlot(getTargetColor());
                 if (rel == -1) rel = findAnyBall();
-
-                // SAFETY: Timeout in case no balls found
                 if (rel == -1) {
                     if (searchTimeoutStart == 0) searchTimeoutStart = System.currentTimeMillis();
                     if (System.currentTimeMillis() - searchTimeoutStart > 800) { exitShooting(); return; }
@@ -186,9 +184,9 @@ public class SpindexerAuto {
         currentSlotIndex = (currentSlotIndex + slotsToMove + 3) % 3;
     }
 
-    private void moveHalfSlotRight() {
+    private void moveHalfSlotLeft() {
         shooter.retractFeeder();
-        accum += TICKS_PER_SLOT / 2.0;
+        accum -= TICKS_PER_SLOT / 2.0;
         targetCounts = (int)Math.rint(zeroCount + accum);
         motor.setTargetPosition(targetCounts);
         motor.setPower(MAX_POWER);
@@ -225,7 +223,7 @@ public class SpindexerAuto {
 
     private void exitShooting() {
         shooter.stopShooter();
-        moveHalfSlotRight();
+        moveHalfSlotLeft();
         Arrays.fill(slots, SlotColor.EMPTY);
         ballsShotThisCycle = 0;
         mode = SpindexerMode.INTAKING;
