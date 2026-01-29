@@ -94,9 +94,12 @@ public class Blue extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
-                follower.followPath(toShoot1);// Start -> Shoot 1
+                if (pathTimer.getElapsedTimeSeconds() < 0.05) {
+                    follower.followPath(toShoot1);
+                }
+
                 if (!follower.isBusy()) {
-                    spindexerauto.setModeShooting(); // start shooting
+                    spindexerauto.setModeShooting();
                     setPathState(1);
                 }
                 break;
@@ -197,6 +200,7 @@ public class Blue extends OpMode {
         telemetry.addData("Slot 0", spindexerauto.getSlotColor(0));
         telemetry.addData("Slot 1", spindexerauto.getSlotColor(1));
         telemetry.addData("Slot 2", spindexerauto.getSlotColor(2));
+        telemetry.addData("pathState",pathState);
         telemetry.update();
     }
 
