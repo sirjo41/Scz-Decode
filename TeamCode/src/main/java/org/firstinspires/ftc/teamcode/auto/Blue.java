@@ -120,6 +120,7 @@ public class Blue extends OpMode {
             case 3:
                 follower.setMaxPower(1);
                 follower.followPath(toShoot2, true);// Feed 1 -> Shoot 2
+                setPathState(4);
                 break;
 
             case 4:
@@ -232,7 +233,7 @@ public class Blue extends OpMode {
         spindexerauto.setGamePattern(detectedPattern);
         limelight.stop();
         intake.setPower(1.0);
-        spindexerauto.scanSlots();
+        //spindexerauto.scanSlots();
         setPathState(0);
     }
 

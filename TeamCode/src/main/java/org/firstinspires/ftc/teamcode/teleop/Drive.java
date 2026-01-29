@@ -104,7 +104,7 @@ public class Drive extends LinearOpMode {
             shooter.updateShooter();
 
             spindexer.updateIntake();
-
+            spindexer.updateForceShot();
             // BACK Button: Emergency Stop Spindexer
             if (gamepad1.back) {
                 spindexer.emergencyStop();
