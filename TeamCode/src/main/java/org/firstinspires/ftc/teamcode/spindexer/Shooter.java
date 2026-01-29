@@ -15,7 +15,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class Shooter {
 
     // Shooter constants
-    public static double TARGET_SHOOTER_RPM = 1300; // TODO: Tune target shooter velocity
+    public static double TARGET_SHOOTER_RPM = 1400; // TODO: Tune target shooter velocity
 
     // Shooter PID coefficients
     public static final double SHOOTER_P = 55; // Tune: Start with 10% of F

@@ -111,18 +111,15 @@ public class SpindexerAuto {
         SlotColor detected = detectColor();
         boolean objectDetected = detected != SlotColor.EMPTY;
 
-        if (objectDetected) {
+        if (objectDetected && slots[currentSlotIndex] == SlotColor.EMPTY) {
             slots[currentSlotIndex] = detected;
-        }
 
-        if (objectDetected && !lastObjectDetected) {
-            if (!isFull()) moveSlots(1);
-            else {
+            if (!isFull()) {
+                moveSlots(1);
+            } else {
                 setModeShooting();
             }
         }
-
-        lastObjectDetected = objectDetected;
     }
 
     /* ================= SHOOTING ================= */
@@ -236,8 +233,8 @@ public class SpindexerAuto {
 
     private SlotColor detectColor() {
         NormalizedRGBA c = intakeSensor.getNormalizedColors();
-        if (c.green > 0.05 && c.green > c.blue) return SlotColor.GREEN;
-        if (c.blue > 0.05 && c.blue > c.green) return SlotColor.PURPLE;
+        if (c.green > 0.04 && c.green > c.blue) return SlotColor.GREEN;
+        if (c.blue > 0.04 && c.blue > c.green) return SlotColor.PURPLE;
         return SlotColor.EMPTY;
     }
 
