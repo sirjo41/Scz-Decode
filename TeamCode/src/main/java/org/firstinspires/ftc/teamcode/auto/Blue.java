@@ -40,12 +40,12 @@ public class Blue extends OpMode {
     private static final String SHOOTER_MOTOR = "shooter";
 
     // Poses
-    private final Pose startPose = new Pose(19, 119, Math.toRadians(144));
+    private final Pose startPose = new Pose(26, 129, Math.toRadians(144));
     private final Pose shootPose = new Pose(44, 104, Math.toRadians(144));
-    private final Pose intake1Pose = new Pose(40, 84, Math.toRadians(180));
-    private final Pose feed1Pose = new Pose(7, 84, Math.toRadians(180));
-    private final Pose intake2Pose = new Pose(40, 60, Math.toRadians(180));
-    private final Pose feed2Pose = new Pose(7, 60, Math.toRadians(180));
+    private final Pose intake1Pose = new Pose(41, 84, Math.toRadians(180));
+    private final Pose feed1Pose = new Pose(17, 84, Math.toRadians(180));
+    private final Pose intake2Pose = new Pose(41, 60, Math.toRadians(180));
+    private final Pose feed2Pose = new Pose(17, 60, Math.toRadians(180));
 
     // Paths
     private PathChain toShoot1, intake1, feed1, toShoot2, intake2, feed2, toShoot3;
@@ -58,7 +58,6 @@ public class Blue extends OpMode {
 
     public void buildPaths() {
         toShoot1 = follower.pathBuilder()
-                .setBrakingStart(0.8)
                 .addPath(new BezierLine(startPose, shootPose))
                 .setLinearHeadingInterpolation(Math.toRadians(144), Math.toRadians(144))
                 .build();
