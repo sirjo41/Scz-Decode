@@ -42,10 +42,10 @@ public class Blue extends OpMode {
     // Poses
     private final Pose startPose = new Pose(19, 119, Math.toRadians(144));
     private final Pose shootPose = new Pose(44, 104, Math.toRadians(144));
-    private final Pose intake1Pose = new Pose(44, 84, Math.toRadians(180));
-    private final Pose feed1Pose = new Pose(10, 84, Math.toRadians(180));
-    private final Pose intake2Pose = new Pose(44, 60, Math.toRadians(180));
-    private final Pose feed2Pose = new Pose(120, 60, Math.toRadians(180));
+    private final Pose intake1Pose = new Pose(42, 84, Math.toRadians(180));
+    private final Pose feed1Pose = new Pose(7, 84, Math.toRadians(180));
+    private final Pose intake2Pose = new Pose(42, 60, Math.toRadians(180));
+    private final Pose feed2Pose = new Pose(7, 60, Math.toRadians(180));
 
     // Paths
     private PathChain toShoot1, intake1, feed1, toShoot2, intake2, feed2, toShoot3;
@@ -134,7 +134,9 @@ public class Blue extends OpMode {
 
             case 4: // Shooting 2
                 if (!follower.isBusy() && !shootingRequested) {
-                    //spindexerauto.setModeShooting();
+                    if(spindexerauto.getMode() == SpindexerAuto.SpindexerMode.INTAKING){
+                        spindexerauto.setModeShooting();
+                    }
                     intake.setPower(0);
                     shootingRequested = true;
                 }
@@ -168,7 +170,9 @@ public class Blue extends OpMode {
 
             case 7: // Shooting 3
                 if (!follower.isBusy() && !shootingRequested) {
-                    //spindexerauto.setModeShooting();
+                    if(spindexerauto.getMode() == SpindexerAuto.SpindexerMode.INTAKING){
+                        spindexerauto.setModeShooting();
+                    }
                     intake.setPower(0);
                     shootingRequested = true;
                 }
