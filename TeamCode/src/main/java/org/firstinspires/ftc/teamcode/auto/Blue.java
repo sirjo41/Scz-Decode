@@ -46,9 +46,10 @@ public class Blue extends OpMode {
     private final Pose feed1Pose = new Pose(23, 84, Math.toRadians(180));
     private final Pose intake2Pose = new Pose(47, 60, Math.toRadians(180));
     private final Pose feed2Pose = new Pose(28, 60, Math.toRadians(180));
+    private final Pose back = new Pose(30, 60, Math.toRadians(180));
 
     // Paths
-    private PathChain toShoot1, intake1, feed1, toShoot2, intake2, feed2, toShoot3;
+    private PathChain toShoot1, intake1, feed1, toShoot2, intake2, feed2, Toback,toShoot3;
 
     // Game Pattern
     private SpindexerAuto.GamePattern detectedPattern = SpindexerAuto.GamePattern.GREEN_FIRST;
@@ -87,8 +88,12 @@ public class Blue extends OpMode {
                 .setTangentHeadingInterpolation()
                 .build();
 
+        Toback = follower.pathBuilder()
+                .addPath(new BezierLine(feed2Pose, back))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                .build();
         toShoot3 = follower.pathBuilder()
-                .addPath(new BezierLine(feed2Pose, shootPose))
+                .addPath(new BezierLine(back, shootPose))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(144))
                 .build();
     }
