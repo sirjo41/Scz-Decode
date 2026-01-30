@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.limelight.LimelightControl;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.spindexer.Shooter;
 
-@Autonomous(name = "Red", group = "Red", preselectTeleOp = "Drive")
+@Autonomous(name = "Red 1", group = "Blue", preselectTeleOp = "Drive")
 public class Red extends OpMode {
 
     private Follower follower;
@@ -40,15 +40,16 @@ public class Red extends OpMode {
     private static final String SHOOTER_MOTOR = "shooter";
 
     // Poses
-    private final Pose startPose = new Pose(118, 129, Math.toRadians(128));
-    private final Pose shootPose = new Pose(100, 104, Math.toRadians(37));
-    private final Pose intake1Pose = new Pose(103, 76, Math.toRadians(0));
-    private final Pose feed1Pose = new Pose(127, 76, Math.toRadians(0));
-    private final Pose intake2Pose = new Pose(103, 53, Math.toRadians(0));
-    private final Pose feed2Pose = new Pose(127, 53, Math.toRadians(0));
+    private final Pose startPose = new Pose(122, 123, Math.toRadians(144));
+    private final Pose shootPose = new Pose(100, 104, Math.toRadians(144));
+    private final Pose intake1Pose = new Pose(97, 84, Math.toRadians(180));
+    private final Pose feed1Pose = new Pose(121, 84, Math.toRadians(180));
+    private final Pose intake2Pose = new Pose(97, 60, Math.toRadians(180));
+    private final Pose feed2Pose = new Pose(116, 60, Math.toRadians(180));
+    private final Pose back = new Pose(114, 60, Math.toRadians(180));
 
     // Paths
-    private PathChain toShoot1, intake1, feed1, toShoot2, intake2, feed2, toShoot3;
+    private PathChain toShoot1, intake1, feed1, toShoot2, intake2, feed2, Toback,toShoot3;
 
     // Game Pattern
     private SpindexerAuto.GamePattern detectedPattern = SpindexerAuto.GamePattern.GREEN_FIRST;
@@ -59,12 +60,12 @@ public class Red extends OpMode {
     public void buildPaths() {
         toShoot1 = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, shootPose))
-                .setLinearHeadingInterpolation(Math.toRadians(128), Math.toRadians(37))
+                .setLinearHeadingInterpolation(Math.toRadians(144), Math.toRadians(144))
                 .build();
 
         intake1 = follower.pathBuilder()
                 .addPath(new BezierLine(shootPose, intake1Pose))
-                .setLinearHeadingInterpolation(Math.toRadians(37), Math.toRadians(0))
+                .setLinearHeadingInterpolation(Math.toRadians(144), Math.toRadians(180))
                 .build();
 
         feed1 = follower.pathBuilder()
@@ -74,12 +75,12 @@ public class Red extends OpMode {
 
         toShoot2 = follower.pathBuilder()
                 .addPath(new BezierLine(feed1Pose, shootPose))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(37))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(144))
                 .build();
 
         intake2 = follower.pathBuilder()
                 .addPath(new BezierLine(shootPose, intake2Pose))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(37))
+                .setLinearHeadingInterpolation(Math.toRadians(144), Math.toRadians(180))
                 .build();
 
         feed2 = follower.pathBuilder()
@@ -87,9 +88,13 @@ public class Red extends OpMode {
                 .setTangentHeadingInterpolation()
                 .build();
 
+        Toback = follower.pathBuilder()
+                .addPath(new BezierLine(feed2Pose, back))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                .build();
         toShoot3 = follower.pathBuilder()
-                .addPath(new BezierLine(feed2Pose, shootPose))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(37))
+                .addPath(new BezierLine(back, shootPose))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(144))
                 .build();
     }
 
@@ -134,6 +139,7 @@ public class Red extends OpMode {
 
             case 4: // Shooting 2
                 if (!follower.isBusy() && !shootingRequested) {
+                    spindexerauto.scanSlots2();
                     spindexerauto.setModeShooting();
                     intake.setPower(0);
                     shootingRequested = true;
@@ -168,18 +174,19 @@ public class Red extends OpMode {
 
             case 7: // Shooting 3
                 if (!follower.isBusy() && !shootingRequested) {
+                    spindexerauto.scanSlots3();
                     spindexerauto.setModeShooting();
-                    intake.setPower(0);
                     shootingRequested = true;
                 }
 
+                // ONLY leave after shooting truly finished
                 if (shootingRequested &&
                         spindexerauto.getMode() == SpindexerAuto.SpindexerMode.INTAKING) {
 
                     shootingRequested = false;
+                    intake.setPower(1.0);
                     setPathState(8);
                 }
-                break;
 
 
             case 8: // End / Park

@@ -143,7 +143,7 @@ public class SpindexerAuto {
                 break;
 
             case MOVING:
-                boolean motorAligned = Math.abs(motor.getCurrentPosition() - targetCounts) < 10;
+                boolean motorAligned = Math.abs(motor.getCurrentPosition() - targetCounts) < 50;
                 if (!motor.isBusy() && motorAligned && shooter.isShooterReady()) {
                     shooter.feed();
                     stateTimer = System.currentTimeMillis();
@@ -152,14 +152,14 @@ public class SpindexerAuto {
                 break;
 
             case FEEDING:
-                if (System.currentTimeMillis() - stateTimer > 300) {
+                if (System.currentTimeMillis() - stateTimer > 200) {
                     shooter.retractFeeder();
                     stateTimer = System.currentTimeMillis();
                     shootingState = ShootingState.RETRACTING;
                 }
                 break;
             case RETRACTING:
-                if (System.currentTimeMillis() - stateTimer > 500) {
+                if (System.currentTimeMillis() - stateTimer > 200) {
                     slots[currentSlotIndex] = SlotColor.EMPTY;
                     ballsShotThisCycle++;
                     stateTimer = System.currentTimeMillis();
@@ -231,8 +231,8 @@ public class SpindexerAuto {
 
     private SlotColor detectColor() {
         NormalizedRGBA c = intakeSensor.getNormalizedColors();
-        if (c.green > 0.04 && c.green > c.blue) return SlotColor.GREEN;
-        if (c.blue > 0.04 && c.blue > c.green) return SlotColor.PURPLE;
+        if (c.green > 0.02 ) return SlotColor.GREEN;
+        if (c.blue > 0.02 ) return SlotColor.PURPLE;
         return SlotColor.EMPTY;
     }
 
