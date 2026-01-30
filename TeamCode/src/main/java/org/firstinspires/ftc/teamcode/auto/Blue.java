@@ -43,9 +43,9 @@ public class Blue extends OpMode {
     private final Pose startPose = new Pose(26, 129, Math.toRadians(144));
     private final Pose shootPose = new Pose(44, 104, Math.toRadians(144));
     private final Pose intake1Pose = new Pose(41, 76, Math.toRadians(180));
-    private final Pose feed1Pose = new Pose(10, 76, Math.toRadians(180));
+    private final Pose feed1Pose = new Pose(15, 76, Math.toRadians(180));
     private final Pose intake2Pose = new Pose(41, 53, Math.toRadians(180));
-    private final Pose feed2Pose = new Pose(10, 53, Math.toRadians(180));
+    private final Pose feed2Pose = new Pose(15, 53, Math.toRadians(180));
 
     // Paths
     private PathChain toShoot1, intake1, feed1, toShoot2, intake2, feed2, toShoot3;

@@ -43,9 +43,9 @@ public class Red extends OpMode {
     private final Pose startPose = new Pose(118, 129, Math.toRadians(37));
     private final Pose shootPose = new Pose(100, 104, Math.toRadians(37));
     private final Pose intake1Pose = new Pose(103, 76, Math.toRadians(0));
-    private final Pose feed1Pose = new Pose(134, 76, Math.toRadians(0));
+    private final Pose feed1Pose = new Pose(127, 76, Math.toRadians(0));
     private final Pose intake2Pose = new Pose(103, 53, Math.toRadians(0));
-    private final Pose feed2Pose = new Pose(134, 53, Math.toRadians(0));
+    private final Pose feed2Pose = new Pose(127, 53, Math.toRadians(0));
 
     // Paths
     private PathChain toShoot1, intake1, feed1, toShoot2, intake2, feed2, toShoot3;
