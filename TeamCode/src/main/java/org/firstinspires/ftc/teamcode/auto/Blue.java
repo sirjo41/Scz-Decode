@@ -40,11 +40,11 @@ public class Blue extends OpMode {
     private static final String SHOOTER_MOTOR = "shooter";
 
     // Poses
-    private final Pose startPose = new Pose(26, 129, Math.toRadians(144));
+    private final Pose startPose = new Pose(22, 123, Math.toRadians(144));
     private final Pose shootPose = new Pose(44, 104, Math.toRadians(144));
-    private final Pose intake1Pose = new Pose(39, 94, Math.toRadians(180));
-    private final Pose feed1Pose = new Pose(25, 94, Math.toRadians(180));
-    private final Pose intake2Pose = new Pose(39, 48, Math.toRadians(180));
+    private final Pose intake1Pose = new Pose(41, 71, Math.toRadians(180));
+    private final Pose feed1Pose = new Pose(25, 71, Math.toRadians(180));
+    private final Pose intake2Pose = new Pose(41, 48, Math.toRadians(180));
     private final Pose feed2Pose = new Pose(25, 48, Math.toRadians(180));
 
     // Paths
