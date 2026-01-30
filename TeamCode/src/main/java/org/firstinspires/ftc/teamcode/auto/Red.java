@@ -40,7 +40,7 @@ public class Red extends OpMode {
     private static final String SHOOTER_MOTOR = "shooter";
 
     // Poses
-    private final Pose startPose = new Pose(118, 129, Math.toRadians(37));
+    private final Pose startPose = new Pose(118, 129, Math.toRadians(128));
     private final Pose shootPose = new Pose(100, 104, Math.toRadians(37));
     private final Pose intake1Pose = new Pose(103, 76, Math.toRadians(0));
     private final Pose feed1Pose = new Pose(127, 76, Math.toRadians(0));
@@ -59,7 +59,7 @@ public class Red extends OpMode {
     public void buildPaths() {
         toShoot1 = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, shootPose))
-                .setLinearHeadingInterpolation(Math.toRadians(37), Math.toRadians(37))
+                .setLinearHeadingInterpolation(Math.toRadians(128), Math.toRadians(37))
                 .build();
 
         intake1 = follower.pathBuilder()
