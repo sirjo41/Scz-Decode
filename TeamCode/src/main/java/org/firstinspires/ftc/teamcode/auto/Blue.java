@@ -44,8 +44,8 @@ public class Blue extends OpMode {
     private final Pose shootPose = new Pose(44, 104, Math.toRadians(144));
     private final Pose intake1Pose = new Pose(47, 84, Math.toRadians(180));
     private final Pose feed1Pose = new Pose(23, 84, Math.toRadians(180));
-    private final Pose intake2Pose = new Pose(47, 60, Math.toRadians(180));
-    private final Pose feed2Pose = new Pose(23, 60, Math.toRadians(180));
+    private final Pose intake2Pose = new Pose(47, 58, Math.toRadians(180));
+    private final Pose feed2Pose = new Pose(23, 58, Math.toRadians(180));
 
     // Paths
     private PathChain toShoot1, intake1, feed1, toShoot2, intake2, feed2, toShoot3;
@@ -170,18 +170,18 @@ public class Blue extends OpMode {
             case 7: // Shooting 3
                 if (!follower.isBusy() && !shootingRequested) {
                     spindexerauto.scanSlots3();
-                        spindexerauto.setModeShooting();
-                    intake.setPower(0);
+                    spindexerauto.setModeShooting();
                     shootingRequested = true;
                 }
 
+                // ONLY leave after shooting truly finished
                 if (shootingRequested &&
                         spindexerauto.getMode() == SpindexerAuto.SpindexerMode.INTAKING) {
 
                     shootingRequested = false;
+                    intake.setPower(1.0);
                     setPathState(8);
                 }
-                break;
 
 
             case 8: // End / Park
