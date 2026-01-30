@@ -46,7 +46,7 @@ public class Red extends OpMode {
     private final Pose feed1Pose = new Pose(126, 84, Math.toRadians(0));
     private final Pose intake2Pose = new Pose(97, 60, Math.toRadians(0));
     private final Pose feed2Pose = new Pose(120, 60, Math.toRadians(0));
-    private final Pose back = new Pose(114, 60, Math.toRadians(0));
+    private final Pose back = new Pose(126, 60, Math.toRadians(0));
 
     // Paths
     private PathChain toShoot1, intake1, feed1, toShoot2, intake2, feed2, Toback,toShoot3;
@@ -90,11 +90,11 @@ public class Red extends OpMode {
 
         Toback = follower.pathBuilder()
                 .addPath(new BezierLine(feed2Pose, back))
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
                 .build();
         toShoot3 = follower.pathBuilder()
                 .addPath(new BezierLine(back, shootPose))
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(36))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(36))
                 .build();
     }
 
