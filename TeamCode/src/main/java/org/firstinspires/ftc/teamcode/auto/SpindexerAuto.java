@@ -252,4 +252,14 @@ public class SpindexerAuto {
         slots[1]= SlotColor.PURPLE;
         slots[2]= SlotColor.PURPLE;
     }
+    public void scanSlots2() {
+        slots[0]= SlotColor.PURPLE;
+        slots[1]= SlotColor.PURPLE;
+        slots[2]= SlotColor.GREEN;
+    }
+    public void scanSlots3() {
+        slots[0]= SlotColor.PURPLE;
+        slots[1]= SlotColor.GREEN;
+        slots[2]= SlotColor.PURPLE;
+    }
 }
