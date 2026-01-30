@@ -40,13 +40,13 @@ public class Red extends OpMode {
     private static final String SHOOTER_MOTOR = "shooter";
 
     // Poses
-    private final Pose startPose = new Pose(122, 123, Math.toRadians(36));
+    private final Pose startPose = new Pose(120, 125, Math.toRadians(36));
     private final Pose shootPose = new Pose(100, 104, Math.toRadians(36));
     private final Pose intake1Pose = new Pose(97, 84, Math.toRadians(0));
     private final Pose feed1Pose = new Pose(126, 84, Math.toRadians(0));
     private final Pose intake2Pose = new Pose(97, 60, Math.toRadians(0));
-    private final Pose feed2Pose = new Pose(120, 60, Math.toRadians(0));
-    private final Pose back = new Pose(126, 60, Math.toRadians(0));
+    private final Pose feed2Pose = new Pose(126, 60, Math.toRadians(0));
+    private final Pose back = new Pose(114, 60, Math.toRadians(0));
 
     // Paths
     private PathChain toShoot1, intake1, feed1, toShoot2, intake2, feed2, Toback,toShoot3;
